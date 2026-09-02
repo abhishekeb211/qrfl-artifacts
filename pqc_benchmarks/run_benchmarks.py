@@ -485,6 +485,64 @@ def emit_crypto_table(summary: pd.DataFrame, out_path: Path) -> None:
     out_path.write_text("\n".join(lines), encoding="utf-8")
 
 
+# Experiment E profiles: (label, kem, sig, nist_level, use_case, highlight)
+PARAMETER_ABLATION_PROFILES = [
+    ("Lightweight", "ML-KEM-512", "ML-DSA-44", "1 / 2", "Low-risk IoMT medical sensors", False),
+    ("Balanced", "ML-KEM-768", "ML-DSA-65", "3 / 3", "Default Healthcare FL stack", True),
+    ("High Assurance", "ML-KEM-1024", "ML-DSA-87", "5 / 5", "Archival/audit ledger entries", False),
+    ("Long-term", "ML-KEM-1024", "SLH-DSA-SHAKE-256s", "5 / 1", "30-year patient record retention", False),
+]
+
+
+def _lookup_ms(summary: pd.DataFrame, scheme: str, operation: str) -> float:
+    row = summary[(summary["scheme"] == scheme) & (summary["operation"] == operation)]
+    if row.empty:
+        raise KeyError(f"Missing benchmark row: {scheme} / {operation}")
+    return float(row.iloc[0]["mean_ms"])
+
+
+def _payload_bytes(summary: pd.DataFrame, kem: str, sig: str) -> int:
+    kem_row = summary[(summary["scheme"] == kem) & (summary["operation"] == "encapsulate")].iloc[0]
+    sig_row = summary[(summary["scheme"] == sig) & (summary["operation"] == "sign")].iloc[0]
+    pk = int(kem_row["public_key_bytes"])
+    ct = int(kem_row["ciphertext_bytes"])
+    sig_b = int(sig_row["signature_bytes"])
+    return pk + ct + sig_b
+
+
+def emit_parameter_ablation_table(summary: pd.DataFrame, out_path: Path) -> None:
+    """Write Experiment E ablation table from measured summary.csv rows."""
+    lines = [
+        "% Auto-generated PQC parameter ablation table (Experiment E)",
+        "\\begin{table*}[htbp]",
+        "\\caption{Experiment E: PQC Parameter Set Ablation and Performance Trade-offs (measured)}",
+        "\\label{tab:parameter_ablation}",
+        "\\centering",
+        "\\small",
+        "\\resizebox{\\textwidth}{!}{",
+        "\\begin{tabular}{llcccccl}",
+        "\\toprule",
+        "Security Profile & KEM Primitive & Signature Primitive & NIST Level & Encapsulate (ms) & Decapsulate (ms) & Payload Size (B) & Primary Clinical Use Case \\\\",
+        "\\midrule",
+    ]
+    for label, kem, sig, nist, use_case, highlight in PARAMETER_ABLATION_PROFILES:
+        enc = _lookup_ms(summary, kem, "encapsulate")
+        dec = _lookup_ms(summary, kem, "decapsulate")
+        payload = _payload_bytes(summary, kem, sig)
+        payload_str = f"{payload:,}"
+
+        def cell(text: str) -> str:
+            return f"\\textbf{{{text}}}" if highlight else text
+
+        lines.append(
+            f"{cell(label)} & {cell(kem)} & {cell(sig)} & {cell(nist)} & "
+            f"{cell(f'{enc:.3f}')} & {cell(f'{dec:.3f}')} & {cell(payload_str)} & "
+            f"{cell(use_case)} \\\\"
+        )
+    lines.extend(["\\bottomrule", "\\end{tabular}}", "\\end{table*}"])
+    out_path.write_text("\n".join(lines), encoding="utf-8")
+
+
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
     cfg = load_config("pqc_benchmarks.yaml")
@@ -551,6 +609,7 @@ def main() -> None:
     all_trials.to_csv(out / "trials.csv", index=False)
     summary.to_csv(out / "summary.csv", index=False)
     emit_crypto_table(summary, out / "crypto_benchmarks.tex")
+    emit_parameter_ablation_table(summary, out / "parameter_ablation.tex")
 
     impls = summary[["scheme", "implementation", "cdef_symbol"]].drop_duplicates()
     emitter = ResultsEmitter(root / "results")

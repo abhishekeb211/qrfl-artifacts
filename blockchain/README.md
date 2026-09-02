@@ -21,19 +21,25 @@ This is an honest hybrid deployment model and should be described as such in the
 
 ```bash
 cd blockchain
+
+# 1. Generate crypto material and system-channel genesis block
+./scripts/generate_crypto.sh          # Windows: .\scripts\generate_crypto.ps1
+
+# 2. Start orderer, peers, and CouchDB
 docker compose up -d
 
-# Generate full crypto material (production):
-# cryptogen generate --config=network/crypto-config.yaml
-# configtxgen -profile QRFL -outputBlock network/config/orderer.genesis.block
+# 3. (Optional) Create application channel and join peers
+./scripts/create_channel.sh
 
-# Build and deploy chaincode
+# 4. Build chaincode (requires Go 1.20+)
 cd chaincode/flupdate && go mod tidy && go build
 
-# Submit transactions
-python client/submit_transactions.py --config ../configs/blockchain.yaml
+# 5. Submit calibrated simulation transactions + collect live Docker stats
+python client/submit_transactions.py
 python client/collect_metrics.py
 ```
+
+The manuscript lives at `../main.tex` (sibling to this repo). Generated LaTeX tables are under `results/` and referenced via `\input{qrfl-artifacts/...}`.
 
 ## Measured Metrics
 

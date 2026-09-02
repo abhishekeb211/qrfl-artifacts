@@ -7,6 +7,7 @@ networks:
 services:
   orderer.example.com:
     image: hyperledger/fabric-orderer:2.5
+    container_name: orderer.example.com
     environment:
       - FABRIC_LOGGING_SPEC=INFO
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
@@ -14,24 +15,42 @@ services:
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=file
       - ORDERER_GENERAL_BOOTSTRAPFILE=/var/hyperledger/orderer/orderer.genesis.block
       - ORDERER_GENERAL_TLS_ENABLED=false
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=
     ports:
       - "7050:7050"
     volumes:
-      - ./network/config:/var/hyperledger/orderer
+      - ./network/config/orderer.genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ./network/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/:/var/hyperledger/orderer
     networks:
       - qrfl-net
 
   peer0.hospitala.example.com:
     image: hyperledger/fabric-peer:2.5
+    container_name: peer0.hospitala.example.com
     environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.hospitala.example.com
       - CORE_PEER_ADDRESS=peer0.hospitala.example.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.hospitala.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.hospitala.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.hospitala.example.com:7051
       - CORE_PEER_LOCALMSPID=HospitalAMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
       - CORE_PEER_TLS_ENABLED=false
       - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb-hospitala:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
     ports:
       - "7051:7051"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./network/crypto-config/peerOrganizations/hospitala.example.com/peers/peer0.hospitala.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./network/core.yaml:/etc/hyperledger/fabric/core.yaml
     depends_on:
       - orderer.example.com
       - couchdb-hospitala
@@ -40,13 +59,26 @@ services:
 
   peer0.hospitalb.example.com:
     image: hyperledger/fabric-peer:2.5
+    container_name: peer0.hospitalb.example.com
     environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.hospitalb.example.com
       - CORE_PEER_ADDRESS=peer0.hospitalb.example.com:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.hospitalb.example.com:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.hospitalb.example.com:9051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.hospitalb.example.com:9051
       - CORE_PEER_LOCALMSPID=HospitalBMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
       - CORE_PEER_TLS_ENABLED=false
     ports:
       - "9051:9051"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./network/crypto-config/peerOrganizations/hospitalb.example.com/peers/peer0.hospitalb.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./network/core.yaml:/etc/hyperledger/fabric/core.yaml
     depends_on:
       - orderer.example.com
     networks:
@@ -54,13 +86,26 @@ services:
 
   peer0.research.example.com:
     image: hyperledger/fabric-peer:2.5
+    container_name: peer0.research.example.com
     environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_PEER_ID=peer0.research.example.com
       - CORE_PEER_ADDRESS=peer0.research.example.com:10051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:10051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.research.example.com:10052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:10052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.research.example.com:10051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.research.example.com:10051
       - CORE_PEER_LOCALMSPID=ResearchMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
       - CORE_PEER_TLS_ENABLED=false
     ports:
       - "10051:10051"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./network/crypto-config/peerOrganizations/research.example.com/peers/peer0.research.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./network/core.yaml:/etc/hyperledger/fabric/core.yaml
     depends_on:
       - orderer.example.com
     networks:
@@ -68,6 +113,7 @@ services:
 
   couchdb-hospitala:
     image: couchdb:3.3
+    container_name: couchdb-hospitala
     environment:
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD=adminpw

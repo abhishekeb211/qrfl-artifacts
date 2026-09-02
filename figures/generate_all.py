@@ -99,6 +99,37 @@ def plot_fl_latency(root: Path, out: Path) -> None:
     plt.close(fig)
 
 
+def plot_hlf_phases(root: Path, out: Path) -> None:
+    """Stacked bar chart of HLF lifecycle phases from calibrated simulation."""
+    from blockchain.client.submit_transactions import load_pqc_latencies, lifecycle_latency_ms
+
+    lat = load_pqc_latencies(root)
+    configs = [
+        ("classical", "Classical"),
+        ("hybrid", "Hybrid"),
+        ("native_pq", "Native PQ"),
+    ]
+    phases = ["endorsement_ms", "ordering_ms", "validation_ms"]
+    phase_labels = ["Endorsement", "Ordering", "Validation"]
+    data = {label: [lifecycle_latency_ms(cfg, lat)[p] for p in phases] for cfg, label in configs}
+
+    fig, ax = plt.subplots(figsize=(3.5, 2.8))
+    x = range(len(configs))
+    bottom = [0.0] * len(configs)
+    for i, (phase_key, phase_label) in enumerate(zip(phases, phase_labels)):
+        heights = [data[label][i] for _, label in configs]
+        ax.bar(x, heights, bottom=bottom, label=phase_label, color=PALETTE[i % len(PALETTE)], width=0.55)
+        bottom = [b + h for b, h in zip(bottom, heights)]
+    ax.set_xticks(list(x))
+    ax.set_xticklabels([label for _, label in configs])
+    ax.set_ylabel("Latency (ms)")
+    ax.legend(frameon=False, fontsize=8)
+    fig.tight_layout()
+    fig.savefig(out / "hlf_phase_latencies.pdf")
+    fig.savefig(out / "hlf_phase_latencies.png")
+    plt.close(fig)
+
+
 def write_architecture_tikz(out: Path) -> None:
     layers = [
         ("ForecastingLayer", "Quantum-Threat Forecasting", "Hardware dataset, exponential/logistic models, bootstrap UQ"),
@@ -130,6 +161,7 @@ def main() -> None:
     plot_forecasting(root, out)
     plot_pqc_summary(root, out)
     plot_fl_latency(root, out)
+    plot_hlf_phases(root, out)
     write_architecture_tikz(out)
     print("Figures generated:", out)
 

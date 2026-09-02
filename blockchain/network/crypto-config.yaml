@@ -1,0 +1,30 @@
+# Hyperledger Fabric crypto material for QRFL 3-peer testbed
+OrdererOrgs:
+  - Name: Orderer
+    Domain: example.com
+    Specs:
+      - Hostname: orderer
+        SANS:
+          - localhost
+
+PeerOrgs:
+  - Name: HospitalA
+    Domain: hospitala.example.com
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: HospitalB
+    Domain: hospitalb.example.com
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: Research
+    Domain: research.example.com
+    Template:
+      Count: 1
+    Users:
+      Count: 1

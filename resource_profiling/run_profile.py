@@ -142,6 +142,47 @@ def _build_pqc_operations() -> list[tuple[str, callable]]:
     ]
 
 
+RESOURCE_TABLE_ROWS = [
+    ("ML-KEM-768_encaps", "ML-KEM-768", "Encapsulation"),
+    ("ML-KEM-768_decaps", "ML-KEM-768", "Decapsulation"),
+    ("ML-DSA-65_sign", "ML-DSA-65", "Sign"),
+    ("ML-DSA-65_verify", "ML-DSA-65", "Verify"),
+]
+
+
+def emit_resource_table(summary: pd.DataFrame, out_path: Path, platform: str = "Intel Xeon Server") -> None:
+    """Write Experiment F resource profiling table for manuscript inclusion."""
+    lines = [
+        "% Auto-generated resource profiling table (Experiment F)",
+        "\\begin{table*}[htbp]",
+        "\\caption{x86 Server Resource Profiling for PQC Operations (ML-KEM-768 / ML-DSA-65, measured)}",
+        "\\label{tab:resource_profiling}",
+        "\\centering",
+        "\\small",
+        "\\begin{tabular}{llcccc}",
+        "\\toprule",
+        "Platform & Scheme & Operation & Latency (ms) & Energy/Op (mJ) & Peak Memory (MB) \\\\",
+        "\\midrule",
+    ]
+    for op_key, scheme, op_label in RESOURCE_TABLE_ROWS:
+        row = summary[summary["operation"] == op_key]
+        if row.empty:
+            continue
+        r = row.iloc[0]
+        lat_sd = r["sd_latency_ms"] if pd.notna(r["sd_latency_ms"]) else 0.0
+        lat_str = f"{r['mean_latency_ms']:.2f} $\\pm$ {lat_sd:.2f}"
+        if pd.notna(r.get("mean_energy_j")):
+            energy_str = f"{float(r['mean_energy_j']) * 1000:.3f}"
+        else:
+            energy_str = "---"
+        mem_str = f"{r['peak_rss_mb']:.1f}"
+        lines.append(
+            f"{platform} & {scheme} & {op_label} & {lat_str} & {energy_str} & {mem_str} \\\\"
+        )
+    lines.extend(["\\bottomrule", "\\end{tabular}", "\\end{table*}"])
+    out_path.write_text("\n".join(lines), encoding="utf-8")
+
+
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
     cfg = load_config("experiment_seeds.yaml")["resource_profiling"]
@@ -170,6 +211,7 @@ def main() -> None:
             .reset_index()
         )
         summary.to_csv(out / "summary.csv", index=False)
+        emit_resource_table(summary, out / "resource_profiling.tex")
     else:
         pd.DataFrame(columns=["operation", "trial", "latency_ms"]).to_csv(out / "trials.csv", index=False)
 

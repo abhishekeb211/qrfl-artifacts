@@ -4,6 +4,8 @@ Reproducibility package for **Threat-Timeline-Driven Quantum-Resistant Federated
 
 This repository generates all experimental numbers, statistical tests, and figure inputs for the manuscript. **Do not hand-type values into `main.tex`**; run the pipeline and include `results/results_macros.tex`.
 
+The LaTeX manuscript (`main.tex`) is maintained at the parent project path `../main.tex` relative to this repo and is not versioned inside `qrfl-artifacts/`.
+
 ## Repository Structure
 
 ```
