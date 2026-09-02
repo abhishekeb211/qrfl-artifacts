@@ -110,7 +110,7 @@ def emit_fl_latency(df: pd.DataFrame, out_path: Path) -> None:
             f"{int(nc)} & {_float(row['classical']['latency_mean'], row['classical']['latency_std'], 2)} & "
             f"{_float(row['hybrid_pq']['latency_mean'], row['hybrid_pq']['latency_std'], 2)} & "
             f"{_float(row['native_pq']['latency_mean'], row['native_pq']['latency_std'], 2)} & "
-            f"+{overhead:.2f}\\% \\\\"
+            f"{overhead:+.2f}\\% \\\\"
         )
     lines.extend(["\\bottomrule", "\\end{tabular}", "\\end{table*}"])
     out_path.write_text("\n".join(lines), encoding="utf-8")
