@@ -6,9 +6,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 COPY requirements.txt .
-# CPU-only PyTorch keeps the image build tractable on non-GPU hosts.
-RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu \
-    && pip install --no-cache-dir $(grep -v '^torch' requirements.txt | grep -v '^torchvision' | grep -v '^#' | grep -v '^$' | tr '\n' ' ')
+# CPU-only PyTorch; PyPI as extra index so deps (typing-extensions, etc.) resolve.
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir \
+        torch==2.5.1+cpu torchvision==0.20.1+cpu \
+        --index-url https://download.pytorch.org/whl/cpu \
+        --extra-index-url https://pypi.org/simple \
+    && pip install --no-cache-dir \
+        $(grep -vE '^(torch|torchvision|#|$)' requirements.txt | tr '\n' ' ')
 
 COPY . .
 ENV PYTHONPATH=/app
