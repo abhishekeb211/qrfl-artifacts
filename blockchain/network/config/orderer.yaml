@@ -1,0 +1,6 @@
+# Minimal genesis placeholder for development bootstrap.
+# Replace with cryptogen/configtxgen output for production testbed.
+# See README in blockchain/network/ for full network generation steps.
+
+ORDERER_GENERAL_BOOTSTRAPMETHOD=file
+ORDERER_GENERAL_BOOTSTRAPFILE=orderer.genesis.block

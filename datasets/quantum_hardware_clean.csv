@@ -1,0 +1,21 @@
+announcement_date,vendor,processor_name,qubits,modality,physical_status,source_url,year,month,t_years,ln_qubits
+2016-05,IBM,QX2,5,Superconducting,experimentally_demonstrated,https://quantum.ibm.com,2016,5,0.33333333333325754,1.6094379124341003
+2016-08,Rigetti,8-Qubit,8,Superconducting,experimentally_demonstrated,https://rigetti.com,2016,8,0.5833333333332575,2.0794415416798357
+2017-05,IBM,QX4,16,Superconducting,experimentally_demonstrated,https://quantum.ibm.com,2017,5,1.3333333333332575,2.772588722239781
+2017-11,IBM,50-Qubit,50,Superconducting,experimentally_demonstrated,https://newsroom.ibm.com,2017,11,1.8333333333332575,3.912023005428146
+2018-03,Google,Bristlecone,72,Superconducting,experimentally_demonstrated,https://research.google,2018,3,2.1666666666667425,4.276666119016055
+2019-10,Google,Sycamore,53,Superconducting,experimentally_demonstrated,https://doi.org/10.1038/s41586-019-1666-5,2019,10,3.75,3.970291913552122
+2020-09,IBM,Falcon,27,Superconducting,commercially_available,https://quantum.ibm.com,2020,9,4.6666666666667425,3.295836866004329
+2020-11,IBM,Hummingbird,65,Superconducting,commercially_available,https://quantum.ibm.com,2020,11,4.8333333333332575,4.174387269895637
+2021-11,IBM,Eagle,127,Superconducting,commercially_available,https://newsroom.ibm.com,2021,11,5.8333333333332575,4.844187086458591
+2022-11,IBM,Osprey,433,Superconducting,commercially_available,https://newsroom.ibm.com,2022,11,6.8333333333332575,6.07073772800249
+2023-03,Quantinuum,H1-1,20,Trapped-Ion,commercially_available,https://quantinuum.com,2023,3,7.1666666666667425,2.995732273553991
+2023-10,Atom Computing,AC1000,1200,Neutral Atom,commercially_available,https://atom-computing.com,2023,10,7.75,7.090076835776092
+2023-12,IBM,Condor,1121,Superconducting,commercially_available,https://newsroom.ibm.com,2023,12,7.9166666666667425,7.02197642307216
+2024-04,Quantinuum,H2-1,56,Trapped-Ion,commercially_available,https://quantinuum.com,2024,4,8.25,4.02535169073515
+2024-12,IBM,Heron r2/r3,156,Superconducting,commercially_available,https://quantum.ibm.com,2024,12,8.916666666666742,5.049856007249537
+2024-12,Google,Willow,105,Superconducting,announced_benchmarking,https://quantumai.google,2024,12,8.916666666666742,4.653960350157523
+2024-12,Rigetti,Ankaa-3,84,Superconducting,commercially_available,https://rigetti.com,2024,12,8.916666666666742,4.430816798843313
+2025-09,IBM,Nighthawk,120,Superconducting,commercially_available,https://quantum.ibm.com,2025,9,9.666666666666742,4.787491742782046
+2025-10,Quantinuum,H5-Series,1200,Trapped-Ion,projected_roadmap,https://quantinuum.com,2025,10,9.75,7.090076835776092
+2026-02,Atom Computing,2048-Atom,2048,Neutral Atom,projected_roadmap,https://atom-computing.com,2026,2,10.083333333333258,7.6246189861593985

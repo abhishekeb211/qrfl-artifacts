@@ -1,0 +1,138 @@
+"""Generate publication-quality figures from results."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import pandas as pd
+
+
+# Journal-readable defaults
+mpl.rcParams.update(
+    {
+        "font.size": 11,
+        "axes.labelsize": 12,
+        "axes.titlesize": 13,
+        "legend.fontsize": 10,
+        "xtick.labelsize": 10,
+        "ytick.labelsize": 10,
+        "figure.dpi": 150,
+        "savefig.dpi": 300,
+        "pdf.fonttype": 42,
+        "ps.fonttype": 42,
+    }
+)
+
+PALETTE = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+
+
+def plot_forecasting(root: Path, out: Path) -> None:
+    csv_path = root / "datasets" / "quantum_hardware_clean.csv"
+    if not csv_path.exists():
+        return
+    df = pd.read_csv(csv_path)
+    fig, ax = plt.subplots(figsize=(3.5, 2.8))
+    ax.scatter(df["year"], df["qubits"], c=PALETTE[0], s=40, label="Observed")
+    t = df["t_years"].values
+    import numpy as np
+    from scipy import stats
+
+    slope, intercept, _, _, _ = stats.linregress(t, np.log(df["qubits"]))
+    years = np.linspace(df["year"].min(), df["year"].max() + 15, 100)
+    t_proj = years - 2016
+    pred = np.exp(intercept + slope * t_proj)
+    ax.plot(years, pred, color=PALETTE[1], label="OLS exponential")
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Physical qubits")
+    ax.set_yscale("log")
+    ax.legend(frameon=False)
+    fig.tight_layout()
+    fig.savefig(out / "forecasting_model_comparison.pdf")
+    plt.close(fig)
+
+
+def plot_pqc_summary(root: Path, out: Path) -> None:
+    summary = root / "results" / "pqc" / "summary.csv"
+    if not summary.exists():
+        return
+    df = pd.read_csv(summary)
+    kem = df[df["scheme"].str.contains("ML-KEM", na=False)]
+    if kem.empty:
+        return
+    fig, ax = plt.subplots(figsize=(3.5, 2.8))
+    ops = kem["operation"].unique()
+    x = range(len(ops))
+    for i, scheme in enumerate(kem["scheme"].unique()):
+        sub = kem[kem["scheme"] == scheme]
+        means = [sub[sub["operation"] == op]["mean_ms"].values[0] for op in ops]
+        ax.bar([xi + i * 0.25 for xi in x], means, width=0.25, label=scheme, color=PALETTE[i % len(PALETTE)])
+    ax.set_xticks([xi + 0.25 for xi in x])
+    ax.set_xticklabels(ops, rotation=20, ha="right")
+    ax.set_ylabel("Latency (ms)")
+    ax.legend(frameon=False, fontsize=8)
+    fig.tight_layout()
+    fig.savefig(out / "pqc_overhead_results.pdf")
+    fig.savefig(out / "pqc_overhead_results.png")
+    plt.close(fig)
+
+
+def plot_fl_latency(root: Path, out: Path) -> None:
+    fl = root / "results" / "fl" / "summary.csv"
+    if not fl.exists():
+        return
+    df = pd.read_csv(fl)
+    sub = df[df["alpha"] == 1.0] if "alpha" in df.columns else df
+    if sub.empty:
+        return
+    fig, ax = plt.subplots(figsize=(3.5, 2.8))
+    for i, mode in enumerate(sub["security_mode"].unique()):
+        m = sub[sub["security_mode"] == mode]
+        ax.plot(m["num_clients"], m["latency_mean"], marker="o", label=mode, color=PALETTE[i])
+    ax.set_xlabel("Number of clients")
+    ax.set_ylabel("Mean round latency (s)")
+    ax.legend(frameon=False)
+    fig.tight_layout()
+    fig.savefig(out / "fl_overhead_results.pdf")
+    fig.savefig(out / "fl_overhead_results.png")
+    plt.close(fig)
+
+
+def write_architecture_tikz(out: Path) -> None:
+    layers = [
+        ("ForecastingLayer", "Quantum-Threat Forecasting", "Hardware dataset, exponential/logistic models, bootstrap UQ"),
+        ("CryptoLayer", "PQC / Crypto-Agility", "ML-KEM, ML-DSA, SLH-DSA, hybrid PKI"),
+        ("FLLayer", "Healthcare Federated Learning", "FedAvg, secure aggregation, non-IID, Byzantine robustness"),
+        ("BlockchainLayer", "Blockchain Validation", "HLF endorsements, chaincode PQC verification"),
+        ("MigrationLayer", "Migration Decision Support", "Mosca inequality, MOSCoW roadmap"),
+    ]
+    for fname, title, desc in layers:
+        tex = f"""% Auto-generated architecture layer: {title}
+\\begin{{figure}}[htbp]
+\\centering
+\\begin{{tikzpicture}}[
+  layer/.style={{draw, rounded corners, minimum width=7cm, minimum height=1.2cm, align=center, fill=gray!8}}
+]
+\\node[layer] (box) {{\\textbf{{{title}}}\\\\\\footnotesize {desc}}};
+\\end{{tikzpicture}}
+\\caption{{{title} layer of the QRFL framework.}}
+\\label{{fig:{fname.lower()}}}
+\\end{{figure}}
+"""
+        (out / f"layer_{fname.lower()}.tex").write_text(tex, encoding="utf-8")
+
+
+def main() -> None:
+    root = Path(__file__).resolve().parents[1]
+    out = root / "figures" / "output"
+    out.mkdir(parents=True, exist_ok=True)
+    plot_forecasting(root, out)
+    plot_pqc_summary(root, out)
+    plot_fl_latency(root, out)
+    write_architecture_tikz(out)
+    print("Figures generated:", out)
+
+
+if __name__ == "__main__":
+    main()

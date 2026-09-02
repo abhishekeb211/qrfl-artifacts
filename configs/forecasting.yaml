@@ -1,0 +1,17 @@
+dataset: datasets/quantum_hardware_clean.csv
+train_end_year: 2023
+holdout_start_year: 2024
+ecdsa_logical_threshold: 2330
+eta_scenarios:
+  optimistic: 1000
+  baseline: 1500
+  conservative: 3000
+inclusion_models:
+  model_a:
+    statuses: [experimentally_demonstrated, commercially_available]
+  model_b:
+    statuses: [experimentally_demonstrated, commercially_available, announced_benchmarking]
+  model_c:
+    statuses: [experimentally_demonstrated, commercially_available, announced_benchmarking, projected_roadmap]
+base_year: 2016
+bootstrap_replicates: 5000

@@ -1,0 +1,23 @@
+dataset: pneumoniamnist
+security_modes:
+  - classical
+  - hybrid_pq
+  - native_pq
+aggregators:
+  - fedavg
+  - median
+  - krum
+attacks:
+  - none
+  - label_flip
+  - sign_flip
+num_seeds: 5
+num_rounds: 20
+local_epochs: 5
+learning_rate: 0.001
+batch_size: 32
+num_clients_default: 25
+dirichlet_alphas: [0.1, 0.5, 1.0]
+kem_scheme: ML-KEM-768
+sig_scheme: ML-DSA-65
+mask_modulus: 1000000007

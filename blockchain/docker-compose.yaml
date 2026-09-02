@@ -1,0 +1,77 @@
+version: "3.7"
+
+networks:
+  qrfl-net:
+    name: qrfl-net
+
+services:
+  orderer.example.com:
+    image: hyperledger/fabric-orderer:2.5
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=file
+      - ORDERER_GENERAL_BOOTSTRAPFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_TLS_ENABLED=false
+    ports:
+      - "7050:7050"
+    volumes:
+      - ./network/config:/var/hyperledger/orderer
+    networks:
+      - qrfl-net
+
+  peer0.hospitala.example.com:
+    image: hyperledger/fabric-peer:2.5
+    environment:
+      - CORE_PEER_ID=peer0.hospitala.example.com
+      - CORE_PEER_ADDRESS=peer0.hospitala.example.com:7051
+      - CORE_PEER_LOCALMSPID=HospitalAMSP
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb-hospitala:5984
+    ports:
+      - "7051:7051"
+    depends_on:
+      - orderer.example.com
+      - couchdb-hospitala
+    networks:
+      - qrfl-net
+
+  peer0.hospitalb.example.com:
+    image: hyperledger/fabric-peer:2.5
+    environment:
+      - CORE_PEER_ID=peer0.hospitalb.example.com
+      - CORE_PEER_ADDRESS=peer0.hospitalb.example.com:9051
+      - CORE_PEER_LOCALMSPID=HospitalBMSP
+      - CORE_PEER_TLS_ENABLED=false
+    ports:
+      - "9051:9051"
+    depends_on:
+      - orderer.example.com
+    networks:
+      - qrfl-net
+
+  peer0.research.example.com:
+    image: hyperledger/fabric-peer:2.5
+    environment:
+      - CORE_PEER_ID=peer0.research.example.com
+      - CORE_PEER_ADDRESS=peer0.research.example.com:10051
+      - CORE_PEER_LOCALMSPID=ResearchMSP
+      - CORE_PEER_TLS_ENABLED=false
+    ports:
+      - "10051:10051"
+    depends_on:
+      - orderer.example.com
+    networks:
+      - qrfl-net
+
+  couchdb-hospitala:
+    image: couchdb:3.3
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=adminpw
+    ports:
+      - "5984:5984"
+    networks:
+      - qrfl-net

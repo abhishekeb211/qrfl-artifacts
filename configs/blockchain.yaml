@@ -1,0 +1,22 @@
+network:
+  orgs:
+    - name: HospitalA
+      peer: peer0.hospitala.example.com
+    - name: HospitalB
+      peer: peer0.hospitalb.example.com
+    - name: ResearchNode
+      peer: peer0.research.example.com
+  channel: qrfl-channel
+  chaincode: flupdate
+configs:
+  classical:
+    signature_scheme: ECDSA-P256
+    payload_pq: false
+  hybrid:
+    signature_scheme: ECDSA-P256+ML-DSA-65
+    payload_pq: true
+  native_pq:
+    signature_scheme: ML-DSA-65
+    payload_pq: true
+transactions_per_config: 100
+metrics_interval_ms: 500

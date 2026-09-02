@@ -1,0 +1,18 @@
+# Generated outputs
+results/
+*.pyc
+__pycache__/
+.venv/
+*.egg-info/
+.pytest_cache/
+medmnist/
+*.pt
+*.pth
+
+# Large benchmark outputs (keep summaries)
+results/pqc/trials.csv
+results/fl/all_results.csv
+
+# Docker / Fabric runtime
+blockchain/network/crypto-config/
+blockchain/network/channel-artifacts/

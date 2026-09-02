@@ -1,0 +1,28 @@
+warmup_iterations: 1000
+trials: 10000
+
+# Wall-clock ceiling per (scheme, operation). SPHINCS+ signing and RSA keygen
+# are ~1000x slower than lattice operations; without a ceiling a full sweep runs
+# for hours. The realised trial count is recorded as `n` in summary.csv.
+max_seconds_per_operation: 60
+
+# RSA-2048 key generation is probabilistic and costs ~10-100 ms per call.
+rsa_keygen_trials: 25
+
+# Set true only on a host with liboqs + the `oqs` binding built, to keep results
+# comparable with liboqs-based literature. Defaults to the quantcrypt backend.
+prefer_liboqs: false
+
+schemes:
+  kem:
+    - ML-KEM-512
+    - ML-KEM-768
+    - ML-KEM-1024
+  sig:
+    - ML-DSA-44
+    - ML-DSA-65
+    - ML-DSA-87
+    - SLH-DSA-SHAKE-128s
+  classical:
+    - ECDSA-P256
+    - RSA-2048

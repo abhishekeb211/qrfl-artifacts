@@ -1,0 +1,35 @@
+# Global experiment seeds for reproducibility
+global_seed: 42
+
+forecasting:
+  bootstrap_replicates: 5000
+  random_seed: 42
+
+pqc_benchmarks:
+  warmup_iterations: 1000
+  trials: 10000
+  random_seed: 42
+
+federated_learning:
+  num_seeds: 10
+  seeds: [11, 22, 33, 44, 55, 66, 77, 88, 99, 110]
+  num_clients: [5, 10, 25, 50]
+  dirichlet_alpha: [0.1, 0.5, 1.0]
+  local_epochs: 5
+  num_rounds: 50
+  learning_rate: 0.001
+  batch_size: 32
+  byzantine_fractions: [0.0, 0.1, 0.2]
+
+blockchain:
+  transactions_per_config: 100
+  configs: [classical, hybrid, native_pq]
+
+resource_profiling:
+  trials: 1000
+  warmup: 100
+
+statistical_tests:
+  alpha: 0.05
+  equivalence_margin_accuracy: 0.01
+  equivalence_margin_f1: 0.01
