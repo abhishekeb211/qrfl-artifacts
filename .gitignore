@@ -39,3 +39,9 @@ main.synctex.gz
 mainNotes.bib
 **/main.tex
 **/main.pdf
+
+# Docker / Fabric runtime secrets & generated crypto
+blockchain/network/crypto-config/
+blockchain/network/channel-artifacts/
+blockchain/network/config/*.block
+blockchain/network/config/*.tx
