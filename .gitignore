@@ -21,19 +21,21 @@ results/fl/full_scale_run.err
 results/**/*.tex
 figures/output/layer_*.tex
 
-# Local narrative / manuscript companion docs (keep off GitHub)
+# Local narrative / manuscript companion docs & reports (keep off GitHub)
 ARCHITECTURE_PROCESS_ANALYSIS.md
 PHASE_RESULTS_REPORT.md
-docs/*.md
-docs/ARCHITECTURE_PROCESS_ANALYSIS.md
-docs/PHASE_RESULTS_REPORT.md
+docs/
 
-# Docker / Fabric runtime secrets & generated crypto
-blockchain/network/crypto-config/
-blockchain/network/channel-artifacts/
-blockchain/network/config/*.block
-blockchain/network/config/*.tx
-
-# Local audit scratch
-docs/_docx_audit.txt
-docs/_pdf_assets/
+# Manuscript root files (main.tex / main.pdf and build sidecars) — local only
+main.tex
+main.pdf
+main.abs
+main.aux
+main.bbl
+main.blg
+main.log
+main.out
+main.synctex.gz
+mainNotes.bib
+**/main.tex
+**/main.pdf

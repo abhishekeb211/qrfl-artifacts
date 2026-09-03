@@ -4,9 +4,7 @@ Reproducibility package for **Threat-Timeline-Driven Quantum-Resistant Federated
 
 This repository generates all experimental numbers, statistical tests, and figure inputs for the manuscript. **Do not hand-type measured values**; run the pipeline and consume emitted CSV/JSON under `results/`.
 
-The LaTeX manuscript is maintained outside this repository and is not versioned here.
-
-**Reports:** consolidated PDF/DOCX under [`docs/`](docs/) (optional). Narrative architecture/phase Markdown stays local and is not published.
+The LaTeX manuscript (`main.tex` / `main.pdf`) and consolidated reports under `docs/` are kept **locally only** and are not published in this repository.
 
 ## Repository Structure
 
