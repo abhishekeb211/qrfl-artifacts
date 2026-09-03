@@ -2,11 +2,11 @@
 
 Reproducibility package for **Threat-Timeline-Driven Quantum-Resistant Federated Learning for Blockchain-Enabled Healthcare Systems**.
 
-This repository generates all experimental numbers, statistical tests, and figure inputs for the manuscript. **Do not hand-type values into `main.tex`**; run the pipeline and include `results/results_macros.tex`.
+This repository generates all experimental numbers, statistical tests, and figure inputs for the manuscript. **Do not hand-type measured values**; run the pipeline and consume emitted CSV/JSON under `results/`.
 
-The LaTeX manuscript (`main.tex`) is maintained at the parent project path `../main.tex` relative to this repo and is not versioned inside `qrfl-artifacts/`.
+The LaTeX manuscript is maintained outside this repository and is not versioned here.
 
-**Documentation export:** see [`docs/`](docs/) in this repo and the workspace [`../docs/`](../docs/) (architecture analysis + phase results reports).
+**Reports:** consolidated PDF/DOCX under [`docs/`](docs/) (optional). Narrative architecture/phase Markdown stays local and is not published.
 
 ## Repository Structure
 
@@ -109,22 +109,22 @@ Phases 0–7 pipeline code and manuscript `\input` hooks are in place. **No Curs
 | Phase | Status | Notes |
 |-------|--------|-------|
 | 0 Infra | Done | venv, `run_all.ps1` / `.sh`, Docker CPU image, GitHub remote |
-| 1 PQC | Done | `results/pqc/crypto_benchmarks.tex`, parameter ablation |
+| 1 PQC | Done | `results/pqc/summary.csv`, parameter ablation profiles |
 | 2 FL | Done | **Current:** 10 seeds × 50 rounds × 270 configs in `results/fl/all_results.csv` (full `experiment_seeds.yaml` target). |
-| 3 Stats | Done | `results/statistics/statistical_tests.tex` (IID baseline, Holm-corrected) |
-| 4 Forecast validation | Done | `results/forecasting/validation/forecast_validation.tex` |
-| 5 Resource (Exp F) | Done | `results/resource/resource_profiling.tex` (energy N/A without RAPL) |
+| 3 Stats | Done | `results/statistics/fl_statistical_tests.csv` (IID baseline, Holm-corrected) |
+| 4 Forecast validation | Done | `results/forecasting/validation/` CSV summaries |
+| 5 Resource (Exp F) | Done | `results/resource/summary.csv` (energy N/A without RAPL) |
 | 6 Figures | Done | `figures/output/*.pdf` (+ PNG) |
 | 7 Verify / Fabric | Done | 3-peer + orderer + CouchDB compose; chaincode deploy optional (needs Go) |
 
-**Intentional / deferred (not blocking manuscript with current corpus):**
+**Intentional / deferred (not blocking with current corpus):**
 
 1. Live Fabric chaincode package/deploy — optional; requires Go
 2. Docker RAPL / ARM edge resource profiling — deferred
 3. Zenodo DOI archival — post-submission
-4. Local `pdflatex` compile of `../main.tex` — not installed on this host
+4. Local manuscript LaTeX compile — host-dependent
 
-Macros in `results/results_macros.tex` reflect the current FL corpus (`\FLNumSeeds{10}`, `\FLNumRounds{50}`).
+Macros / LaTeX table fragments are regenerated locally under `results/` (`FLNumSeeds=10`, `FLNumRounds=50` in `results/macros.json`).
 
 To regenerate FL tables after any future re-run:
 
@@ -133,8 +133,6 @@ python scripts/finalize_fl_results.py
 python -m statistical_tests.run_all
 python -m figures.generate_all
 ```
-
-*Companion documents:* `PHASE_RESULTS_REPORT.md` (numeric corpus), `ARCHITECTURE_PROCESS_ANALYSIS.md` (process architecture + step-by-step analysis), `README.md` (phase status), canvases `QRFL-Phase-Results-Report` and `QRFL-Architecture-Process-Analysis`.
 
 ## License
 

@@ -17,6 +17,17 @@ results/fl/run_log.txt
 results/fl/progress.log
 results/fl/full_scale_run.err
 
+# Manuscript-bound LaTeX fragments (generated locally for main.tex; not published)
+results/**/*.tex
+figures/output/layer_*.tex
+
+# Local narrative / manuscript companion docs (keep off GitHub)
+ARCHITECTURE_PROCESS_ANALYSIS.md
+PHASE_RESULTS_REPORT.md
+docs/*.md
+docs/ARCHITECTURE_PROCESS_ANALYSIS.md
+docs/PHASE_RESULTS_REPORT.md
+
 # Docker / Fabric runtime secrets & generated crypto
 blockchain/network/crypto-config/
 blockchain/network/channel-artifacts/
