@@ -1,4 +1,6 @@
 # Full QRFL reproducibility pipeline (Windows PowerShell)
+# Publication-scale FL: 10 seeds x 50 rounds x 270 configs (~hours on CPU; uses parallel workers).
+# Delete results/fl/all_results.csv before a clean re-run.
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $Root

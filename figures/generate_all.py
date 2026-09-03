@@ -50,6 +50,54 @@ def plot_forecasting(root: Path, out: Path) -> None:
     ax.legend(frameon=False)
     fig.tight_layout()
     fig.savefig(out / "forecasting_model_comparison.pdf")
+    fig.savefig(out / "forecasting_model_comparison.png")
+    plt.close(fig)
+
+
+def plot_threshold_uncertainty(root: Path, out: Path) -> None:
+    scenarios = root / "results" / "forecasting" / "scenarios.csv"
+    if not scenarios.exists():
+        return
+    df = pd.read_csv(scenarios)
+    fig, ax = plt.subplots(figsize=(3.5, 2.8))
+    labels = df["scenario"].str.capitalize()
+    medians = df["bootstrap_median"]
+    lowers = df["ci_lower_95"]
+    uppers = df["ci_upper_95"]
+    x = range(len(df))
+    ax.errorbar(
+        x,
+        medians,
+        yerr=[medians - lowers, uppers - medians],
+        fmt="o",
+        color=PALETTE[0],
+        capsize=4,
+        label="Bootstrap median",
+    )
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("Threshold crossing year")
+    ax.set_xlabel("Scenario")
+    ax.legend(frameon=False)
+    fig.tight_layout()
+    fig.savefig(out / "threshold_crossing_uncertainty.pdf")
+    fig.savefig(out / "threshold_crossing_uncertainty.png")
+    plt.close(fig)
+
+
+def plot_sensitivity(root: Path, out: Path) -> None:
+    scenarios = root / "results" / "forecasting" / "scenarios.csv"
+    if not scenarios.exists():
+        return
+    df = pd.read_csv(scenarios)
+    fig, ax = plt.subplots(figsize=(3.5, 2.8))
+    ax.bar(df["scenario"], df["point_estimate_year"], color=PALETTE[1], label="Point estimate")
+    ax.set_ylabel("Crossing year")
+    ax.set_xlabel("Scenario ($\\eta$)")
+    ax.set_title("Timeline sensitivity by $\\eta$ scenario")
+    fig.tight_layout()
+    fig.savefig(out / "sensitivity_analysis.pdf")
+    fig.savefig(out / "sensitivity_analysis.png")
     plt.close(fig)
 
 
@@ -159,6 +207,8 @@ def main() -> None:
     out = root / "figures" / "output"
     out.mkdir(parents=True, exist_ok=True)
     plot_forecasting(root, out)
+    plot_threshold_uncertainty(root, out)
+    plot_sensitivity(root, out)
     plot_pqc_summary(root, out)
     plot_fl_latency(root, out)
     plot_hlf_phases(root, out)

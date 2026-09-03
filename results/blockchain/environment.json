@@ -1,0 +1,34 @@
+{
+  "pqc_latencies_ms": {
+    "ecdsa_sign_ms": 0.0346442599988222,
+    "ecdsa_verify_ms": 0.08492241001004,
+    "mldsa_sign_ms": 0.8503927500003556,
+    "mldsa_verify_ms": 0.2453944800028694,
+    "mlkem_encap_ms": 0.1281257100079528,
+    "mlkem_decap_ms": 0.0908598399970287
+  },
+  "phase_latencies_ms": {
+    "classical": {
+      "endorsement_ms": 25.35870001002659,
+      "ordering_ms": 40.21898555000498,
+      "validation_ms": 15.25476723003012,
+      "total_ms": 80.8324527900617,
+      "payload_bytes": 576
+    },
+    "hybrid": {
+      "endorsement_ms": 28.39129447000614,
+      "ordering_ms": 40.21898555000498,
+      "validation_ms": 15.990950670038728,
+      "total_ms": 84.60123069004985,
+      "payload_bytes": 10245
+    },
+    "native_pq": {
+      "endorsement_ms": 28.287361690009675,
+      "ordering_ms": 40.21898555000498,
+      "validation_ms": 15.736183440008608,
+      "total_ms": 84.24253068002326,
+      "payload_bytes": 9927
+    }
+  },
+  "mode": "calibrated_simulation"
+}

@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import copy
-
 import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 
-from federated_learning.model import get_parameters, set_parameters
+from federated_learning.model import get_parameters
 
 
 def train_local(

@@ -1,0 +1,57 @@
+{
+  "backend": "quantcrypt-cffi",
+  "python": "3.12.8 (tags/v3.12.8:2dc476b, Dec  3 2024, 19:30:04) [MSC v.1942 64 bit (AMD64)]",
+  "platform": "Windows-2022Server-10.0.20348-SP0",
+  "processor": "Intel64 Family 6 Model 85 Stepping 7, GenuineIntel",
+  "machine": "AMD64",
+  "trials_requested": 10000,
+  "warmup_iterations": 1000,
+  "max_seconds_per_operation": 60.0,
+  "implementations": [
+    {
+      "scheme": "ECDSA-P256",
+      "implementation": "openssl",
+      "cdef_symbol": "ECDSA-P256"
+    },
+    {
+      "scheme": "ML-DSA-44",
+      "implementation": "clean",
+      "cdef_symbol": "PQCLEAN_MLDSA44_CLEAN"
+    },
+    {
+      "scheme": "ML-DSA-65",
+      "implementation": "clean",
+      "cdef_symbol": "PQCLEAN_MLDSA65_CLEAN"
+    },
+    {
+      "scheme": "ML-DSA-87",
+      "implementation": "clean",
+      "cdef_symbol": "PQCLEAN_MLDSA87_CLEAN"
+    },
+    {
+      "scheme": "ML-KEM-1024",
+      "implementation": "clean",
+      "cdef_symbol": "PQCLEAN_MLKEM1024_CLEAN"
+    },
+    {
+      "scheme": "ML-KEM-512",
+      "implementation": "clean",
+      "cdef_symbol": "PQCLEAN_MLKEM512_CLEAN"
+    },
+    {
+      "scheme": "ML-KEM-768",
+      "implementation": "clean",
+      "cdef_symbol": "PQCLEAN_MLKEM768_CLEAN"
+    },
+    {
+      "scheme": "RSA-2048",
+      "implementation": "openssl",
+      "cdef_symbol": "RSA-2048"
+    },
+    {
+      "scheme": "SLH-DSA-SHAKE-256s",
+      "implementation": "avx2",
+      "cdef_symbol": "PQCLEAN_SPHINCSSHAKE256SSIMPLE_AVX2"
+    }
+  ]
+}

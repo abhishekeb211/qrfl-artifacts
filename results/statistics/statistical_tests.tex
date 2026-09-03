@@ -1,0 +1,25 @@
+% Auto-generated statistical test table
+\begin{table}[htbp]
+\centering
+\caption{Statistical comparison of security configurations at IID baseline ($\alpha=1.0$, 25 clients; Holm-corrected)}
+\label{tab:statistical_tests}
+\small
+\begin{tabular}{llllrrrr}
+\toprule
+Metric & Mode A & Mode B & Test & Statistic & $p$ (Holm) & Effect & Interpretation \\
+\midrule
+accuracy & classical & hybrid_pq & tost_equivalence & 0.0000 & 0.0000 & 0.0000 & equivalent \\
+accuracy & classical & native_pq & tost_equivalence & 0.0000 & 0.0000 & 0.0000 & equivalent \\
+accuracy & hybrid_pq & native_pq & tost_equivalence & 0.0000 & 0.0000 & 0.0000 & equivalent \\
+f1 & classical & hybrid_pq & tost_equivalence & 0.0000 & 0.0000 & 0.0000 & equivalent \\
+f1 & classical & native_pq & tost_equivalence & 0.0000 & 0.0000 & 0.0000 & equivalent \\
+f1 & hybrid_pq & native_pq & tost_equivalence & 0.0000 & 0.0000 & 0.0000 & equivalent \\
+mean_round_latency_s & classical & hybrid_pq & paired_t_test & 1.1038 & 0.5966 & 0.3491 & not_significant \\
+mean_round_latency_s & classical & native_pq & paired_t_test & 1.8630 & 0.2861 & 0.5891 & not_significant \\
+mean_round_latency_s & hybrid_pq & native_pq & wilcoxon_signed_rank & 26.0000 & 0.9219 & 0.0545 & not_significant \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% Non-IID supplementary comparisons (CSV only; not duplicated in main table)
+% 18 non-IID pairwise rows in fl_statistical_tests_non_iid.csv

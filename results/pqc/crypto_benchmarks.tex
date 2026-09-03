@@ -1,0 +1,31 @@
+% Auto-generated crypto benchmark table (Experiment A)
+\begin{table*}[htbp]
+\centering
+\caption{Cryptographic Primitive Performance Overheads (measured)}
+\label{tab:crypto_benchmarks}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+Scheme & Operation & Mean (ms) & SD (ms) & Public key size (B) & Sig./CT size (B) & Security level \\
+\midrule
+ECDSA-P256 & Sign & 0.035 & 0.002 & 64 & 71 & Classical \\
+ECDSA-P256 & Verify & 0.085 & 0.003 & 64 & 71 & Classical \\
+ML-DSA-44 & Sign & 0.580 & 0.333 & 1312 & 2420 & NIST Level 2 \\
+ML-DSA-44 & Verify & 0.151 & 0.016 & 1312 & 2420 & NIST Level 2 \\
+ML-DSA-65 & Sign & 0.850 & 0.502 & 1952 & 3309 & NIST Level 3 \\
+ML-DSA-65 & Verify & 0.245 & 0.019 & 1952 & 3309 & NIST Level 3 \\
+ML-DSA-87 & Sign & 1.068 & 0.527 & 2592 & 4627 & NIST Level 5 \\
+ML-DSA-87 & Verify & 0.411 & 0.023 & 2592 & 4627 & NIST Level 5 \\
+ML-KEM-1024 & Encapsulate & 0.175 & 0.015 & 1568 & 1568 & NIST Level 5 \\
+ML-KEM-1024 & Decapsulate & 0.135 & 0.008 & 1568 & 1568 & NIST Level 5 \\
+ML-KEM-512 & Encapsulate & 0.098 & 0.003 & 800 & 768 & NIST Level 1 \\
+ML-KEM-512 & Decapsulate & 0.056 & 0.002 & 800 & 768 & NIST Level 1 \\
+ML-KEM-768 & Encapsulate & 0.128 & 0.004 & 1184 & 1088 & NIST Level 3 \\
+ML-KEM-768 & Decapsulate & 0.091 & 0.013 & 1184 & 1088 & NIST Level 3 \\
+RSA-2048 & Sign & 0.718 & 0.113 & 256 & 256 & Classical \\
+RSA-2048 & Verify & 0.030 & 0.002 & 256 & 256 & Classical \\
+SLH-DSA-SHAKE-256s & Sign & 536.766 & 5.838 & 64 & 29792 & NIST Level 1 (256s) \\
+SLH-DSA-SHAKE-256s & Verify & 1.108 & 0.074 & 64 & 29792 & NIST Level 1 (256s) \\
+\bottomrule
+\end{tabular}}
+\end{table*}

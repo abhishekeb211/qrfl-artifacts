@@ -15,6 +15,7 @@ from forecasting.fit_models import (
     fit_exponential_ols,
     fit_logistic,
 )
+from forecasting.emit_tables import build_validation_summary, emit_forecast_validation_table
 from forecasting.loocv import loocv
 from forecasting.residuals import residual_analysis
 from forecasting.scenarios import scenario_projections
@@ -89,16 +90,29 @@ def main() -> None:
     val_dir.mkdir(parents=True, exist_ok=True)
     holdout = backtest_holdout(df, config["train_end_year"], config["holdout_start_year"])
     holdout["predictions"].to_csv(val_dir / "holdout_predictions.csv", index=False)
-    loocv(df).to_csv(val_dir / "loocv.csv", index=False)
-    rolling_origin_backtest(df).to_csv(val_dir / "rolling_origin.csv", index=False)
+    rolling = rolling_origin_backtest(df)
+    rolling.to_csv(val_dir / "rolling_origin.csv", index=False)
+    loo_df = loocv(df)
+    loo_df.to_csv(val_dir / "loocv.csv", index=False)
     res = residual_analysis(df)
     res["residuals"].to_csv(val_dir / "residuals.csv", index=False)
+    res["cooks_distance"].to_csv(val_dir / "cooks_distance.csv", index=False)
+
+    val_summary = build_validation_summary(df, config["train_end_year"], config["holdout_start_year"])
+    pd.Series(val_summary).to_csv(val_dir / "backtest_summary.csv")
+    residual_summary = {k: v for k, v in res.items() if k not in ("cooks_distance", "residuals")}
+    pd.Series(residual_summary).to_csv(val_dir / "residual_summary.csv")
+    emit_forecast_validation_table(val_summary, val_dir / "forecast_validation.tex")
 
     emitter = ResultsEmitter(root / "results")
     emitter.set_macro("ForecastGrowthRate", fit.growth_rate, ".4f")
     emitter.set_macro("ForecastDoublingTime", fit.doubling_time, ".2f")
     emitter.set_macro("ForecastRSquared", fit.r_squared, ".4f")
     emitter.set_macro("ForecastBootstrapCILower", fit_summary["bootstrap_ci_lower"], ".2f")
+    emitter.set_macro("ForecastHoldoutMAE", val_summary["holdout_mae"], ".2f")
+    emitter.set_macro("ForecastHoldoutRMSE", val_summary["holdout_rmse"], ".2f")
+    emitter.set_macro("ForecastHoldoutMAPE", val_summary["holdout_mape"], ".2f")
+    emitter.set_macro("ForecastLOOCVMAE", val_summary["loocv_mae"], ".2f")
     emitter.write_macros()
     print("Forecasting complete:", out)
 

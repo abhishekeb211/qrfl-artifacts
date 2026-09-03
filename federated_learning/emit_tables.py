@@ -101,7 +101,7 @@ def emit_fl_latency(df: pd.DataFrame, out_path: Path) -> None:
         for mode in ["classical", "hybrid_pq", "native_pq"]:
             s = _mode_stats(df, mode, {"num_clients": nc, "alpha": 1.0})
             row[mode] = s
-        if not row.get("classical") or not row.get("native_pq"):
+        if not row.get("classical") or not row.get("hybrid_pq") or not row.get("native_pq"):
             continue
         c = row["classical"]["latency_mean"]
         n = row["native_pq"]["latency_mean"]

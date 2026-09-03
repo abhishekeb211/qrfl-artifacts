@@ -61,10 +61,31 @@ def tost_equivalence(
 ) -> dict:
     diff = a - b
     mean_diff = float(np.mean(diff))
+    max_abs = float(np.max(np.abs(diff)))
+    if max_abs < margin or np.allclose(diff, 0.0):
+        return {
+            "test": "tost_equivalence",
+            "margin": margin,
+            "mean_diff": mean_diff,
+            "statistic": 0.0,
+            "p_equivalence": 0.0,
+            "equivalent": True,
+            "max_abs_diff": max_abs,
+        }
     se = stats.sem(diff)
     df = len(diff) - 1
-    t_lower = (mean_diff + margin) / se if se > 0 else float("inf")
-    t_upper = (mean_diff - margin) / se if se > 0 else float("-inf")
+    if se == 0 or df < 1:
+        return {
+            "test": "tost_equivalence",
+            "margin": margin,
+            "mean_diff": mean_diff,
+            "statistic": 0.0,
+            "p_equivalence": 0.0,
+            "equivalent": max_abs < margin,
+            "max_abs_diff": max_abs,
+        }
+    t_lower = (mean_diff + margin) / se
+    t_upper = (mean_diff - margin) / se
     p_lower = float(stats.t.cdf(t_lower, df))
     p_upper = float(1 - stats.t.cdf(t_upper, df))
     p_equiv = max(p_lower, p_upper)
@@ -72,9 +93,10 @@ def tost_equivalence(
         "test": "tost_equivalence",
         "margin": margin,
         "mean_diff": mean_diff,
+        "statistic": mean_diff,
         "p_equivalence": p_equiv,
         "equivalent": p_equiv < alpha,
-        "max_abs_diff": float(np.max(np.abs(diff))),
+        "max_abs_diff": max_abs,
     }
 
 
@@ -130,48 +152,88 @@ def apply_holm_correction(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def analyze_fl_results(fl_path: Path, alpha: float, eq_margin_acc: float, eq_margin_f1: float) -> pd.DataFrame:
-    df = pd.read_csv(fl_path)
+def _baseline_fl_subset(df: pd.DataFrame, default_nc: int, alpha_val: float) -> pd.DataFrame:
+    sub = df[
+        (df["num_clients"] == default_nc)
+        & (df["alpha"] == alpha_val)
+        & (df["aggregator"] == "fedavg")
+        & (df["attack"] == "none")
+        & (df["malicious_fraction"] == 0.0)
+    ]
+    return sub
+
+
+def _compare_modes(
+    sub: pd.DataFrame,
+    metric: str,
+    pairs: list[tuple[str, str]],
+    alpha: float,
+    eq_margin_acc: float,
+    eq_margin_f1: float,
+    section: str,
+    alpha_val: float,
+) -> list[dict]:
     rows = []
+    for mode_a, mode_b in pairs:
+        a = sub[sub["security_mode"] == mode_a].groupby("seed")[metric].mean()
+        b = sub[sub["security_mode"] == mode_b].groupby("seed")[metric].mean()
+        aligned = pd.concat([a, b], axis=1, join="inner").dropna()
+        if aligned.empty:
+            continue
+        if metric in ("accuracy", "f1"):
+            res = tost_equivalence(
+                aligned.iloc[:, 0].values,
+                aligned.iloc[:, 1].values,
+                eq_margin_acc if metric == "accuracy" else eq_margin_f1,
+                alpha,
+            )
+            res["interpretation"] = "equivalent" if res["equivalent"] else "not_equivalent"
+        else:
+            res = paired_test(aligned.iloc[:, 0].values, aligned.iloc[:, 1].values, alpha)
+            res["interpretation"] = "significant" if res["significant"] else "not_significant"
+        rows.append(
+            {
+                "section": section,
+                "alpha": alpha_val,
+                "metric": metric,
+                "mode_a": mode_a,
+                "mode_b": mode_b,
+                **res,
+            }
+        )
+    return rows
+
+
+def analyze_fl_results(
+    fl_path: Path,
+    alpha: float,
+    eq_margin_acc: float,
+    eq_margin_f1: float,
+    default_nc: int = 25,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    df = pd.read_csv(fl_path)
     pairs = [
         ("classical", "hybrid_pq"),
         ("classical", "native_pq"),
         ("hybrid_pq", "native_pq"),
     ]
-    for alpha_val in df["alpha"].unique():
-        sub = df[(df["num_clients"] == df["num_clients"].mode().iloc[0]) & (df["alpha"] == alpha_val)]
-        if "attack" in sub.columns:
-            sub = sub[sub["attack"] == "none"]
-        elif "malicious_fraction" in sub.columns:
-            sub = sub[sub["malicious_fraction"] == 0.0]
+    primary_rows: list[dict] = []
+    non_iid_rows: list[dict] = []
+
+    iid_sub = _baseline_fl_subset(df, default_nc, 1.0)
+    for metric in ["accuracy", "f1", "mean_round_latency_s"]:
+        primary_rows.extend(
+            _compare_modes(iid_sub, metric, pairs, alpha, eq_margin_acc, eq_margin_f1, "iid", 1.0)
+        )
+
+    for alpha_val in sorted(a for a in df["alpha"].unique() if a != 1.0):
+        sub = _baseline_fl_subset(df, default_nc, alpha_val)
         for metric in ["accuracy", "f1", "mean_round_latency_s"]:
-            for mode_a, mode_b in pairs:
-                a = sub[sub["security_mode"] == mode_a].groupby("seed")[metric].mean()
-                b = sub[sub["security_mode"] == mode_b].groupby("seed")[metric].mean()
-                aligned = pd.concat([a, b], axis=1, join="inner").dropna()
-                if aligned.empty:
-                    continue
-                if metric in ("accuracy", "f1"):
-                    res = tost_equivalence(
-                        aligned.iloc[:, 0].values,
-                        aligned.iloc[:, 1].values,
-                        eq_margin_acc if metric == "accuracy" else eq_margin_f1,
-                        alpha,
-                    )
-                    res["interpretation"] = "equivalent" if res["equivalent"] else "not_equivalent"
-                else:
-                    res = paired_test(aligned.iloc[:, 0].values, aligned.iloc[:, 1].values, alpha)
-                    res["interpretation"] = "significant" if res["significant"] else "not_significant"
-                rows.append(
-                    {
-                        "alpha": alpha_val,
-                        "metric": metric,
-                        "mode_a": mode_a,
-                        "mode_b": mode_b,
-                        **res,
-                    }
-                )
-    return pd.DataFrame(rows)
+            non_iid_rows.extend(
+                _compare_modes(sub, metric, pairs, alpha, eq_margin_acc, eq_margin_f1, "non_iid", alpha_val)
+            )
+
+    return pd.DataFrame(primary_rows), pd.DataFrame(non_iid_rows)
 
 
 def analyze_pqc_results(pqc_path: Path, alpha: float) -> pd.DataFrame:
@@ -192,15 +254,26 @@ def analyze_pqc_results(pqc_path: Path, alpha: float) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def emit_latex_table(df: pd.DataFrame, out_path: Path) -> None:
-    if df.empty:
+def _row_interp(row: pd.Series) -> str:
+    if row.get("test") == "tost_equivalence":
+        holm_p = row.get("p_value_holm", row.get("p_equivalence"))
+        if pd.notna(holm_p) and float(holm_p) < 0.05:
+            return "equivalent"
+        if row.get("equivalent"):
+            return "equivalent"
+        return "not_equivalent"
+    return "significant" if row.get("significant_holm") else "not_significant"
+
+
+def emit_latex_table(primary: pd.DataFrame, out_path: Path, non_iid: pd.DataFrame | None = None) -> None:
+    if primary.empty:
         out_path.write_text("% No statistical results yet\n", encoding="utf-8")
         return
     lines = [
         "% Auto-generated statistical test table",
         "\\begin{table}[htbp]",
         "\\centering",
-        "\\caption{Statistical comparison of security configurations (Holm-corrected)}",
+        "\\caption{Statistical comparison of security configurations at IID baseline ($\\alpha=1.0$, 25 clients; Holm-corrected)}",
         "\\label{tab:statistical_tests}",
         "\\small",
         "\\begin{tabular}{llllrrrr}",
@@ -208,18 +281,26 @@ def emit_latex_table(df: pd.DataFrame, out_path: Path) -> None:
         "Metric & Mode A & Mode B & Test & Statistic & $p$ (Holm) & Effect & Interpretation \\\\",
         "\\midrule",
     ]
-    for _, row in df.iterrows():
+    for _, row in primary.iterrows():
         pcol = row.get("p_value_holm", row.get("p_value", row.get("p_equivalence", float("nan"))))
         stat = row.get("statistic", row.get("mean_diff", float("nan")))
         effect = row.get("effect_size", row.get("max_abs_diff", float("nan")))
-        interp = row.get("interpretation", "")
-        if "significant_holm" in row and row.get("test") not in ("tost_equivalence",):
-            interp = "significant" if row["significant_holm"] else "not_significant"
+        if pd.isna(effect) and row.get("test") == "tost_equivalence":
+            effect = row.get("max_abs_diff", float("nan"))
+        interp = _row_interp(row)
         lines.append(
             f"{row.get('metric','')} & {row.get('mode_a','')} & {row.get('mode_b','')} & "
             f"{row.get('test','')} & {stat:.4f} & {pcol:.4f} & {effect:.4f} & {interp} \\\\"
         )
     lines.extend(["\\bottomrule", "\\end{tabular}", "\\end{table}"])
+    if non_iid is not None and not non_iid.empty:
+        lines.extend(
+            [
+                "",
+                "% Non-IID supplementary comparisons (CSV only; not duplicated in main table)",
+                f"% {len(non_iid)} non-IID pairwise rows in fl_statistical_tests_non_iid.csv",
+            ]
+        )
     out_path.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -229,26 +310,39 @@ def main() -> None:
     alpha = cfg["alpha"]
 
     fl_path = root / "results" / "fl" / "all_results.csv"
+    fl_cfg = load_config("federated_learning.yaml")
+    default_nc = fl_cfg.get("num_clients_default", 25)
     if not fl_path.exists():
         print("WARN: FL results not found; run federated_learning first")
-        fl_stats = pd.DataFrame()
+        fl_primary = pd.DataFrame()
+        fl_non_iid = pd.DataFrame()
     else:
-        fl_stats = analyze_fl_results(fl_path, alpha, cfg["equivalence_margin_accuracy"], cfg["equivalence_margin_f1"])
-        fl_stats = apply_holm_correction(fl_stats)
+        fl_primary, fl_non_iid = analyze_fl_results(
+            fl_path, alpha, cfg["equivalence_margin_accuracy"], cfg["equivalence_margin_f1"], default_nc
+        )
+        fl_primary = apply_holm_correction(fl_primary)
+        if not fl_non_iid.empty:
+            fl_non_iid = apply_holm_correction(fl_non_iid)
 
     pqc_stats = analyze_pqc_results(root / "results" / "pqc" / "trials.csv", alpha)
 
     out = root / "results" / "statistics"
     out.mkdir(parents=True, exist_ok=True)
-    fl_stats.to_csv(out / "fl_statistical_tests.csv", index=False)
+    fl_primary.to_csv(out / "fl_statistical_tests.csv", index=False)
+    fl_non_iid.to_csv(out / "fl_statistical_tests_non_iid.csv", index=False)
     pqc_stats.to_csv(out / "pqc_summary_stats.csv", index=False)
-    emit_latex_table(fl_stats, out / "statistical_tests.tex")
+    emit_latex_table(fl_primary, out / "statistical_tests.tex", fl_non_iid)
 
     emitter = ResultsEmitter(root / "results")
-    if not fl_stats.empty:
-        lat = fl_stats[(fl_stats["metric"] == "mean_round_latency_s") & (fl_stats["mode_a"] == "classical") & (fl_stats["mode_b"] == "native_pq")]
+    if not fl_primary.empty:
+        lat = fl_primary[
+            (fl_primary["metric"] == "mean_round_latency_s")
+            & (fl_primary["mode_a"] == "classical")
+            & (fl_primary["mode_b"] == "native_pq")
+        ]
         if not lat.empty:
-            emitter.set_macro("StatLatencyClassicalVsNativeP", lat.iloc[0]["p_value"], ".4f")
+            pcol = lat.iloc[0].get("p_value_holm", lat.iloc[0].get("p_value"))
+            emitter.set_macro("StatLatencyClassicalVsNativeP", pcol, ".4f")
     emitter.write_macros()
     print("Statistical tests complete:", out)
 

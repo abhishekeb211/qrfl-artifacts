@@ -1,0 +1,22 @@
+% Auto-generated forecast validation table
+\begin{table}[htbp]
+\centering
+\caption{Forecast validation metrics for exponential growth model (measured)}
+\label{tab:forecast_validation}
+\small
+\begin{tabular}{lrrr}
+\toprule
+Validation strategy & MAE & RMSE & MAPE (\%) \\
+\midrule
+Hold-out (2024--2026) & 563.39 & 602.62 & 424.63 \\
+Rolling-origin & 600.51 & 768.92 & 311.40 \\
+Leave-one-out ($n=20$) & 316.24 & 544.69 & 151.37 \\
+\midrule
+\multicolumn{4}{l}{\textit{Residual diagnostics (log-scale)}} \\
+Residual mean & \multicolumn{3}{r}{-0.0000} \\
+Shapiro--Wilk $p$ & \multicolumn{3}{r}{0.3948} \\
+Durbin--Watson & \multicolumn{3}{r}{1.7962} \\
+Ljung--Box $p$ (lag 1) & \multicolumn{3}{r}{0.8377} \\
+\bottomrule
+\end{tabular}
+\end{table}

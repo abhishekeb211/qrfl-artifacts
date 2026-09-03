@@ -11,8 +11,7 @@ attacks:
   - none
   - label_flip
   - sign_flip
-num_seeds: 5
-num_rounds: 20
+# num_seeds and num_rounds are read from experiment_seeds.yaml (single source of truth)
 local_epochs: 5
 learning_rate: 0.001
 batch_size: 32
