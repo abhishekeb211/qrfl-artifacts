@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-09-04T02:37Z",
+  "image": "abhi211b/qrfl-rapl:latest",
+  "image_id": "sha256:6a392564b86a7ce9f144ff03fcc8689f3754eed89bec8402eb2843e86b2a9b3c",
+  "host_os": "Linux 6.18.33.2-microsoft-standard-WSL2",
+  "kernel": "Linux 014118aaa30c 6.18.33.2-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Thu Jun 18 21:54:43 UTC 2026 x86_64 GNU/Linux",
+  "cpu": "Intel(R) Xeon(R) Silver 4210 CPU @ 2.20GHz",
+  "rapl_available": false,
+  "status": "NO_RAPL",
+  "powercap_entries": [],
+  "intel_rapl_domains": [],
+  "hardware_requirements": {
+    "numeric_mj": [
+      "Bare-metal Linux (or VM with intel-rapl exposed)",
+      "Intel CPU with RAPL",
+      "/sys/class/powercap/intel-rapl/*/energy_uj readable",
+      "Typically docker run --privileged (or bind-mount powercap)"
+    ],
+    "this_host_policy": "Docker Desktop / WSL2 usually has an empty powercap tree; energy cells must remain ---; never invent joules"
+  },
+  "energy_policy": "Do not invent joules; energy cells remain unavailable (---) until intel-rapl energy_uj is readable",
+  "image_size": "995MB",
+  "arm_edge": "out of scope (Raspberry Pi / Jetson deferred)"
+}
+

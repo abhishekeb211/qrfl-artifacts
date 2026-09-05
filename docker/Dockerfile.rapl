@@ -1,0 +1,50 @@
+# Dedicated RAPL / Exp F image — NOT the full abhi211b/qrfl pipeline stack.
+# Tag: abhi211b/qrfl-rapl:latest
+#
+# Numeric mJ requires host intel-rapl (bare-metal Linux). On Docker Desktop/WSL2
+# powercap is typically empty → probe emits NO_RAPL; energy cells stay ---.
+
+FROM python:3.10.14-slim-bookworm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libssl-dev git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY docker/requirements-rapl.txt /tmp/requirements-rapl.txt
+# Linux wheels often omit PQClean .so; compile Exp F algos into the image.
+# NOTE: qclib compile currently wipes most of /usr/local/bin (including python3.10)
+# and drops .so files there instead of quantcrypt.internal.bin — fix both after compile.
+RUN mkdir -p /tmp/pybin-backup \
+    && cp -a /usr/local/bin/. /tmp/pybin-backup/ \
+    && pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r /tmp/requirements-rapl.txt \
+    && qclib compile --no-ask MLKEM768 MLDSA65 \
+    && cp -an /tmp/pybin-backup/. /usr/local/bin/ \
+    && BINDIR="/usr/local/lib/python3.10/site-packages/quantcrypt/internal/bin" \
+    && mkdir -p "$BINDIR" \
+    && printf '' > "$BINDIR/__init__.py" \
+    && mv /usr/local/bin/ml_*.cpython-*.so "$BINDIR/" 2>/dev/null || true \
+    && find /tmp/pybin-backup -maxdepth 1 -name 'ml_*.cpython-*.so' -exec mv {} "$BINDIR/" \; 2>/dev/null || true \
+    && ls "$BINDIR" \
+    && rm -rf /tmp/pybin-backup /tmp/requirements-rapl.txt \
+    && python3 -c "from quantcrypt import kem,dss; kem.MLKEM_768(); dss.MLDSA_65(); print('quantcrypt_ok')"
+
+COPY qrfl_common/ /app/qrfl_common/
+COPY resource_profiling/ /app/resource_profiling/
+COPY configs/experiment_seeds.yaml /app/configs/experiment_seeds.yaml
+COPY docker/rapl_entrypoint.sh /usr/local/bin/rapl_entrypoint.sh
+
+# Normalize CRLF (Windows checkouts) and ensure python3 is on PATH as python.
+RUN sed -i 's/\r$//' /usr/local/bin/rapl_entrypoint.sh \
+    && chmod +x /usr/local/bin/rapl_entrypoint.sh \
+    && ln -sf /usr/local/bin/python3 /usr/local/bin/python \
+    && mkdir -p /app/results/resource
+
+ENV PYTHONPATH=/app
+ENV QRFL_RAPL_IMAGE=abhi211b/qrfl-rapl:latest
+
+# Default: hardware probe (soft-fail NO_RAPL on constrained hosts)
+ENTRYPOINT ["rapl_entrypoint.sh"]
+CMD ["probe"]

@@ -2,20 +2,27 @@
 *.pyc
 __pycache__/
 .venv/
+.venv*/
+venv/
 *.egg-info/
+dist/
+build/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 medmnist/
 *.pt
 *.pth
 
 # Keep measured results in git; ignore noisy/runtime logs and backups
 results/**/*.log
-results/**/*.bak
+results/**/*.bak*
 results/**/*.err
 results/docker_build*.log
 results/fl/run_log.txt
 results/fl/progress.log
 results/fl/full_scale_run.err
+*.bak*
 
 # Manuscript-bound LaTeX fragments (generated locally for main.tex; not published)
 results/**/*.tex
@@ -24,6 +31,7 @@ figures/output/layer_*.tex
 # Local narrative / manuscript companion docs & reports (keep off GitHub)
 ARCHITECTURE_PROCESS_ANALYSIS.md
 PHASE_RESULTS_REPORT.md
+blockchain/FABRIC_CHAINCODE_BLOCKER.md
 docs/
 
 # Manuscript root files (main.tex / main.pdf and build sidecars) — local only
@@ -36,12 +44,31 @@ main.blg
 main.log
 main.out
 main.synctex.gz
+main.synctex(busy)
+main.fls
+main.fdb_latexmk
 mainNotes.bib
 **/main.tex
 **/main.pdf
+qrfl-artifacts.rar
+para_dump.txt
 
-# Docker / Fabric runtime secrets & generated crypto
+# Docker / Fabric runtime secrets, generated crypto & test network artifacts
 blockchain/network/crypto-config/
 blockchain/network/channel-artifacts/
-blockchain/network/config/*.block
-blockchain/network/config/*.tx
+blockchain/network/**/*.block
+blockchain/network/**/*.tx
+blockchain/network/**/*.pb
+blockchain/network/*.json
+blockchain/network/config/*_decoded*.json
+blockchain/network/*.tar.gz
+blockchain/network/.chaincode_deployed
+blockchain/chaincode/flupdate/vendor/
+blockchain/fabric-samples/
+blockchain/install-fabric.sh
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

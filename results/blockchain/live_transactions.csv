@@ -1,0 +1,2 @@
+config,tx_id,latency_ms,confirmed,mode,operation
+native_pq,0,221.0,True,live_chaincode,SubmitUpdate

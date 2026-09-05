@@ -8,7 +8,7 @@
   "FLNativeLatencyOverheadPct": "-0.53",
   "FLNumRounds": "50",
   "FLNumSeeds": "10",
-  "ForecastBootstrapCILower": "2042.10",
+  "ForecastBootstrapCILower": "2042.08",
   "ForecastDoublingTime": "1.86",
   "ForecastGrowthRate": "0.3731",
   "ForecastHoldoutMAE": "563.39",
@@ -99,5 +99,6 @@
   "PqcSlhDsaShakeTwoFiveSixSVerifyN": "10000",
   "PqcSlhDsaShakeTwoFiveSixSVerifySD": "0.074",
   "ResourcePlatform": "x86\\_server",
+  "StatFriedmanLatencyP": "0.6703",
   "StatLatencyClassicalVsNativeP": "0.2861"
 }

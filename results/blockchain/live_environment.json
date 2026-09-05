@@ -1,0 +1,16 @@
+{
+  "mode": "live_chaincode",
+  "network": "fabric-samples-test-network-etcdraft",
+  "channel": "qrflchannel",
+  "chaincode": "flupdate",
+  "package_id": "flupdate_1.0:d9ce61e98c19be49eed3152f6a531d6132d30701abf38254d27aef8ccfd4cf13",
+  "chaincode_deployed": true,
+  "channel_height_after_invoke": 7,
+  "sample_submit_update_latency_ms": 221,
+  "hosts": {
+    "peer0.org1.example.com": 7051,
+    "peer0.org2.example.com": 9051,
+    "orderer.example.com": 7050
+  },
+  "notes": "Custom Solo compose replaced by Hyperledger fabric-samples test-network. Confirmed peer lifecycle commit and SubmitUpdate invoke."
+}

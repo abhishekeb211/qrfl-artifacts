@@ -166,8 +166,14 @@ def run_single(
             flat_update = [p.clone() for p in params]
             if client_id in malicious:
                 flat_update = apply_attack(flat_update, attack)
-            masked = apply_mask(flat_update, client_id, num_clients, round_id, cfg["mask_modulus"])
-            local_updates.append(masked)
+            # Pairwise masks cancel only under linear aggregation (FedAvg).
+            # Coordinate-wise Median and Krum are nonlinear and must see
+            # unmasked updates; applying masks first collapses them.
+            if aggregator == "fedavg":
+                update = apply_mask(flat_update, client_id, num_clients, round_id, cfg["mask_modulus"])
+            else:
+                update = flat_update
+            local_updates.append(update)
 
         if aggregator == "fedavg":
             aggregated = fedavg(local_updates)

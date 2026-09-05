@@ -1,0 +1,7 @@
+# Slim deps for abhi211b/qrfl-rapl (Exp F only — no torch/FL stack)
+numpy>=1.26.4,<3
+pandas>=2.2.2,<4
+PyYAML>=6.0.1,<7
+# [compiler] so Dockerfile can run `qclib compile` for Linux PQClean binaries
+quantcrypt[compiler]>=1.0.1,<2
+psutil>=5.9.8,<8

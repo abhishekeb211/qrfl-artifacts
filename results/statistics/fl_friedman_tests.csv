@@ -1,0 +1,10 @@
+section,alpha,metric,mode_a,mode_b,test,statistic,p_value,effect_size,significant,interpretation,n_seeds
+iid,1.0,accuracy,classical,hybrid_pq+native_pq,friedman,0.0,1.0,,False,not_significant,10
+iid,1.0,f1,classical,hybrid_pq+native_pq,friedman,0.0,1.0,,False,not_significant,10
+iid,1.0,mean_round_latency_s,classical,hybrid_pq+native_pq,friedman,0.8000000000000114,0.6703200460356356,,False,not_significant,10
+non_iid,0.1,accuracy,classical,hybrid_pq+native_pq,friedman,0.0,1.0,,False,not_significant,10
+non_iid,0.1,f1,classical,hybrid_pq+native_pq,friedman,0.0,1.0,,False,not_significant,10
+non_iid,0.1,mean_round_latency_s,classical,hybrid_pq+native_pq,friedman,0.8000000000000114,0.6703200460356356,,False,not_significant,10
+non_iid,0.5,accuracy,classical,hybrid_pq+native_pq,friedman,0.0,1.0,,False,not_significant,10
+non_iid,0.5,f1,classical,hybrid_pq+native_pq,friedman,0.0,1.0,,False,not_significant,10
+non_iid,0.5,mean_round_latency_s,classical,hybrid_pq+native_pq,friedman,0.8000000000000114,0.6703200460356356,,False,not_significant,10

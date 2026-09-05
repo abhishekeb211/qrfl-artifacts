@@ -111,16 +111,16 @@ Phases 0–7 pipeline code and manuscript `\input` hooks are in place. **No Curs
 | 2 FL | Done | **Current:** 10 seeds × 50 rounds × 270 configs in `results/fl/all_results.csv` (full `experiment_seeds.yaml` target). |
 | 3 Stats | Done | `results/statistics/fl_statistical_tests.csv` (IID baseline, Holm-corrected) |
 | 4 Forecast validation | Done | `results/forecasting/validation/` CSV summaries |
-| 5 Resource (Exp F) | Done | `results/resource/summary.csv` (energy N/A without RAPL) |
+| 5 Resource (Exp F) | Done | `results/resource/summary.csv` (energy `---` accepted; RAPL N/A on this host) |
 | 6 Figures | Done | `figures/output/*.pdf` (+ PNG) |
-| 7 Verify / Fabric | Done | 3-peer + orderer + CouchDB compose; chaincode deploy optional (needs Go) |
+| 7 Verify / Fabric | Done | test-network etcdraft; `flupdate` commit + invoke (`live_chaincode`) |
 
-**Intentional / deferred (not blocking with current corpus):**
+**Intentional / accepted for this submission (not open gaps):**
 
-1. Live Fabric chaincode package/deploy — optional; requires Go
-2. Docker RAPL / ARM edge resource profiling — deferred
-3. Zenodo DOI archival — post-submission
-4. Local manuscript LaTeX compile — host-dependent
+1. Numeric RAPL energy (mJ) — host powercap unavailable; energy cells stay `---` (no invented joules). Probe: `results/resource/rapl_probe.json`.
+2. Zenodo DOI — discarded for this round; cite the GitHub repository. Archive script remains optional (`scripts/prepare_zenodo_archive.py`).
+3. ARM Raspberry Pi / Jetson edge profiling — out of scope.
+4. Local manuscript LaTeX compile — host-dependent.
 
 Macros / LaTeX table fragments are regenerated locally under `results/` (`FLNumSeeds=10`, `FLNumRounds=50` in `results/macros.json`).
 
@@ -138,10 +138,4 @@ This repository is licensed under the [MIT License](LICENSE).
 
 ## Citation and Archival
 
-After all artifacts are generated and verified:
-
-1. Push to GitHub
-2. Create a Zenodo release and obtain a DOI
-3. Update the manuscript Data/Code Availability statements with the DOI
-
-**Do not cite a DOI until the archive exists.**
+Cite the GitHub repository. A Zenodo DOI is **not** required for this submission (discarded as an open gap). Optional: `python scripts/prepare_zenodo_archive.py` if you later deposit.

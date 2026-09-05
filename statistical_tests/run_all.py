@@ -102,13 +102,30 @@ def tost_equivalence(
 
 def repeated_measures_anova(wide_df: pd.DataFrame, value_col_prefix: str = "") -> dict:
     """Simple one-way repeated measures via Friedman test (non-parametric fallback)."""
-    cols = [c for c in wide_df.columns if c.startswith(value_col_prefix) or value_col_prefix == ""]
     if value_col_prefix:
         cols = [c for c in wide_df.columns if c.startswith(value_col_prefix)]
     else:
         cols = list(wide_df.columns)
+    # Identical values across modes (e.g., mask-cancelled accuracy) make Friedman undefined.
+    stacked = wide_df[cols].to_numpy()
+    if stacked.size == 0 or np.allclose(stacked, stacked[:, :1]):
+        return {
+            "test": "friedman",
+            "statistic": 0.0,
+            "p_value": 1.0,
+            "columns": cols,
+            "note": "constant_across_modes",
+        }
     arrays = [wide_df[c].values for c in cols]
     stat, p = stats.friedmanchisquare(*arrays)
+    if np.isnan(stat) or np.isnan(p):
+        return {
+            "test": "friedman",
+            "statistic": 0.0,
+            "p_value": 1.0,
+            "columns": cols,
+            "note": "undefined_ties",
+        }
     return {"test": "friedman", "statistic": float(stat), "p_value": float(p), "columns": cols}
 
 
@@ -204,13 +221,40 @@ def _compare_modes(
     return rows
 
 
+def _friedman_three_mode(sub: pd.DataFrame, metric: str, section: str, alpha_val: float) -> dict | None:
+    """Friedman test across classical / hybrid_pq / native_pq for one metric."""
+    modes = ["classical", "hybrid_pq", "native_pq"]
+    series = []
+    for mode in modes:
+        s = sub[sub["security_mode"] == mode].groupby("seed")[metric].mean()
+        series.append(s.rename(mode))
+    wide = pd.concat(series, axis=1, join="inner").dropna()
+    if wide.shape[0] < 3 or wide.shape[1] < 3:
+        return None
+    res = repeated_measures_anova(wide)
+    return {
+        "section": section,
+        "alpha": alpha_val,
+        "metric": metric,
+        "mode_a": "classical",
+        "mode_b": "hybrid_pq+native_pq",
+        "test": "friedman",
+        "statistic": res["statistic"],
+        "p_value": res["p_value"],
+        "effect_size": float("nan"),
+        "significant": res["p_value"] < 0.05,
+        "interpretation": "significant" if res["p_value"] < 0.05 else "not_significant",
+        "n_seeds": int(wide.shape[0]),
+    }
+
+
 def analyze_fl_results(
     fl_path: Path,
     alpha: float,
     eq_margin_acc: float,
     eq_margin_f1: float,
     default_nc: int = 25,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     df = pd.read_csv(fl_path)
     pairs = [
         ("classical", "hybrid_pq"),
@@ -219,12 +263,16 @@ def analyze_fl_results(
     ]
     primary_rows: list[dict] = []
     non_iid_rows: list[dict] = []
+    friedman_rows: list[dict] = []
 
     iid_sub = _baseline_fl_subset(df, default_nc, 1.0)
     for metric in ["accuracy", "f1", "mean_round_latency_s"]:
         primary_rows.extend(
             _compare_modes(iid_sub, metric, pairs, alpha, eq_margin_acc, eq_margin_f1, "iid", 1.0)
         )
+        fr = _friedman_three_mode(iid_sub, metric, "iid", 1.0)
+        if fr:
+            friedman_rows.append(fr)
 
     for alpha_val in sorted(a for a in df["alpha"].unique() if a != 1.0):
         sub = _baseline_fl_subset(df, default_nc, alpha_val)
@@ -232,8 +280,11 @@ def analyze_fl_results(
             non_iid_rows.extend(
                 _compare_modes(sub, metric, pairs, alpha, eq_margin_acc, eq_margin_f1, "non_iid", alpha_val)
             )
+            fr = _friedman_three_mode(sub, metric, "non_iid", float(alpha_val))
+            if fr:
+                friedman_rows.append(fr)
 
-    return pd.DataFrame(primary_rows), pd.DataFrame(non_iid_rows)
+    return pd.DataFrame(primary_rows), pd.DataFrame(non_iid_rows), pd.DataFrame(friedman_rows)
 
 
 def analyze_pqc_results(pqc_path: Path, alpha: float) -> pd.DataFrame:
@@ -265,7 +316,28 @@ def _row_interp(row: pd.Series) -> str:
     return "significant" if row.get("significant_holm") else "not_significant"
 
 
-def emit_latex_table(primary: pd.DataFrame, out_path: Path, non_iid: pd.DataFrame | None = None) -> None:
+def _fmt_num(val, default: str = "---") -> str:
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return default
+    try:
+        return f"{float(val):.4f}"
+    except (TypeError, ValueError):
+        return default
+
+
+def _tex_ident(val, default: str = "---") -> str:
+    """Escape underscores so auto-generated identifiers are valid LaTeX text."""
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return default
+    return str(val).replace("_", r"\_")
+
+
+def emit_latex_table(
+    primary: pd.DataFrame,
+    out_path: Path,
+    non_iid: pd.DataFrame | None = None,
+    friedman: pd.DataFrame | None = None,
+) -> None:
     if primary.empty:
         out_path.write_text("% No statistical results yet\n", encoding="utf-8")
         return
@@ -289,18 +361,76 @@ def emit_latex_table(primary: pd.DataFrame, out_path: Path, non_iid: pd.DataFram
             effect = row.get("max_abs_diff", float("nan"))
         interp = _row_interp(row)
         lines.append(
-            f"{row.get('metric','')} & {row.get('mode_a','')} & {row.get('mode_b','')} & "
-            f"{row.get('test','')} & {stat:.4f} & {pcol:.4f} & {effect:.4f} & {interp} \\\\"
+            f"{_tex_ident(row.get('metric',''))} & {_tex_ident(row.get('mode_a',''))} & "
+            f"{_tex_ident(row.get('mode_b',''))} & {_tex_ident(row.get('test',''))} & "
+            f"{_fmt_num(stat)} & {_fmt_num(pcol)} & {_fmt_num(effect)} & {_tex_ident(interp)} \\\\"
         )
+    if friedman is not None and not friedman.empty:
+        iid_fr = friedman[friedman["section"] == "iid"] if "section" in friedman.columns else friedman
+        for _, row in iid_fr.iterrows():
+            lines.append(
+                f"{_tex_ident(row.get('metric',''))} & all three & --- & friedman & "
+                f"{_fmt_num(row.get('statistic'))} & {_fmt_num(row.get('p_value'))} & --- & "
+                f"{_tex_ident(row.get('interpretation',''))} \\\\"
+            )
     lines.extend(["\\bottomrule", "\\end{tabular}", "\\end{table}"])
     if non_iid is not None and not non_iid.empty:
         lines.extend(
             [
                 "",
-                "% Non-IID supplementary comparisons (CSV only; not duplicated in main table)",
+                "% Non-IID pairwise comparisons also emitted as statistical_tests_non_iid.tex",
                 f"% {len(non_iid)} non-IID pairwise rows in fl_statistical_tests_non_iid.csv",
             ]
         )
+    out_path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def emit_non_iid_latex(non_iid: pd.DataFrame, friedman: pd.DataFrame, out_path: Path) -> None:
+    """Compact non-IID statistical table for manuscript inclusion."""
+    if non_iid.empty:
+        out_path.write_text("% No non-IID statistical results yet\n", encoding="utf-8")
+        return
+    lines = [
+        "% Auto-generated non-IID statistical test table",
+        "\\begin{table}[htbp]",
+        "\\centering",
+        "\\caption{Non-IID statistical comparisons (Dirichlet $\\alpha\\in\\{0.1,0.5\\}$, 25 clients; Holm-corrected)}",
+        "\\label{tab:statistical_tests_non_iid}",
+        "\\small",
+        "\\resizebox{\\textwidth}{!}{%",
+        "\\begin{tabular}{cllllrrr}",
+        "\\toprule",
+        "$\\alpha$ & Metric & Mode A & Mode B & Test & $p$ (Holm) & Effect & Interpretation \\\\",
+        "\\midrule",
+    ]
+    # Prefer latency + one utility metric to keep table compact
+    prefer = non_iid[
+        non_iid["metric"].isin(["mean_round_latency_s", "accuracy"])
+        & (non_iid["mode_a"] == "classical")
+        & (non_iid["mode_b"].isin(["hybrid_pq", "native_pq"]))
+    ]
+    if prefer.empty:
+        prefer = non_iid
+    for _, row in prefer.iterrows():
+        pcol = row.get("p_value_holm", row.get("p_value", row.get("p_equivalence", float("nan"))))
+        effect = row.get("effect_size", row.get("max_abs_diff", float("nan")))
+        if pd.isna(effect) and row.get("test") == "tost_equivalence":
+            effect = row.get("max_abs_diff", float("nan"))
+        lines.append(
+            f"{row.get('alpha','')} & {_tex_ident(row.get('metric',''))} & "
+            f"{_tex_ident(row.get('mode_a',''))} & {_tex_ident(row.get('mode_b',''))} & "
+            f"{_tex_ident(row.get('test',''))} & {_fmt_num(pcol)} & {_fmt_num(effect)} & "
+            f"{_tex_ident(_row_interp(row))} \\\\"
+        )
+    if friedman is not None and not friedman.empty:
+        non_fr = friedman[friedman["section"] == "non_iid"] if "section" in friedman.columns else pd.DataFrame()
+        lat_fr = non_fr[non_fr["metric"] == "mean_round_latency_s"] if not non_fr.empty else non_fr
+        for _, row in lat_fr.iterrows():
+            lines.append(
+                f"{row.get('alpha','')} & {_tex_ident(row.get('metric',''))} & all three & --- & friedman & "
+                f"{_fmt_num(row.get('p_value'))} & --- & {_tex_ident(row.get('interpretation',''))} \\\\"
+            )
+    lines.extend(["\\bottomrule", "\\end{tabular}%", "}", "\\end{table}"])
     out_path.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -312,12 +442,13 @@ def main() -> None:
     fl_path = root / "results" / "fl" / "all_results.csv"
     fl_cfg = load_config("federated_learning.yaml")
     default_nc = fl_cfg.get("num_clients_default", 25)
+    fl_friedman = pd.DataFrame()
     if not fl_path.exists():
         print("WARN: FL results not found; run federated_learning first")
         fl_primary = pd.DataFrame()
         fl_non_iid = pd.DataFrame()
     else:
-        fl_primary, fl_non_iid = analyze_fl_results(
+        fl_primary, fl_non_iid, fl_friedman = analyze_fl_results(
             fl_path, alpha, cfg["equivalence_margin_accuracy"], cfg["equivalence_margin_f1"], default_nc
         )
         fl_primary = apply_holm_correction(fl_primary)
@@ -330,8 +461,10 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
     fl_primary.to_csv(out / "fl_statistical_tests.csv", index=False)
     fl_non_iid.to_csv(out / "fl_statistical_tests_non_iid.csv", index=False)
+    fl_friedman.to_csv(out / "fl_friedman_tests.csv", index=False)
     pqc_stats.to_csv(out / "pqc_summary_stats.csv", index=False)
-    emit_latex_table(fl_primary, out / "statistical_tests.tex", fl_non_iid)
+    emit_latex_table(fl_primary, out / "statistical_tests.tex", fl_non_iid, fl_friedman)
+    emit_non_iid_latex(fl_non_iid, fl_friedman, out / "statistical_tests_non_iid.tex")
 
     emitter = ResultsEmitter(root / "results")
     if not fl_primary.empty:
@@ -343,6 +476,12 @@ def main() -> None:
         if not lat.empty:
             pcol = lat.iloc[0].get("p_value_holm", lat.iloc[0].get("p_value"))
             emitter.set_macro("StatLatencyClassicalVsNativeP", pcol, ".4f")
+    if not fl_friedman.empty:
+        lat_fr = fl_friedman[
+            (fl_friedman["section"] == "iid") & (fl_friedman["metric"] == "mean_round_latency_s")
+        ]
+        if not lat_fr.empty:
+            emitter.set_macro("StatFriedmanLatencyP", lat_fr.iloc[0]["p_value"], ".4f")
     emitter.write_macros()
     print("Statistical tests complete:", out)
 

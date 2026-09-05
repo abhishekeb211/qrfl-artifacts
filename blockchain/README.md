@@ -1,59 +1,31 @@
-# Hyperledger Fabric 3-Peer Testbed
+# Hyperledger Fabric Testbed (QRFL)
 
-## Architecture
+## Recommended live path (etcdraft)
 
-| Peer | Role |
-|------|------|
-| `peer0.hospitala.example.com` | Hospital / Healthcare Organization A |
-| `peer0.hospitalb.example.com` | Hospital / Healthcare Organization B |
-| `peer0.research.example.com` | Research / Aggregation Node |
+Custom Solo compose on Docker Desktop failed to cut `_lifecycle` blocks. Use **Fabric samples test-network**:
 
-## PQC Integration Constraint
+```powershell
+# Requires C:\fabric-samples (Fabric 2.5 binaries + test-network) and Docker Desktop
+powershell -ExecutionPolicy Bypass -File scripts/up_testnetwork.ps1
+powershell -ExecutionPolicy Bypass -File scripts/deploy_testnetwork_flupdate.ps1
+```
 
-Hyperledger Fabric MSP identity uses **ECDSA P-256** and cannot be replaced with ML-DSA without forking Fabric. PQC protection is implemented at the **application/chaincode layer**:
+See `FABRIC_CHAINCODE_BLOCKER.md` for Solo failure history and etcdraft resolution.
 
-- FL update payloads carry **ML-DSA-65** signatures
-- Chaincode verifies signatures via `cloudflare/circl` (`blockchain/chaincode/flupdate/`)
+## Architecture (application PQC)
 
-This is an honest hybrid deployment model and should be described as such in the manuscript.
+| Component | Role |
+|-----------|------|
+| Fabric MSP | ECDSA P-256 (unchanged) |
+| Chaincode `flupdate` | ML-DSA-65 verify of FL update payloads (`cloudflare/circl`) |
 
-## Setup
+This is an honest hybrid deployment model.
+
+## Calibrated simulation
 
 ```bash
-cd blockchain
-
-# 1. Generate crypto material and system-channel genesis block
-./scripts/generate_crypto.sh          # Windows: .\scripts\generate_crypto.ps1
-
-# 2. Start orderer, peers, and CouchDB
-docker compose up -d
-
-# 3. (Optional) Create application channel and join peers
-./scripts/create_channel.sh
-
-# 4. Build chaincode (requires Go 1.20+)
-cd chaincode/flupdate && go mod tidy && go build
-
-# 5. Submit calibrated simulation transactions + collect live Docker stats
 python client/submit_transactions.py
 python client/collect_metrics.py
 ```
 
-The manuscript lives at `../main.tex` (sibling to this repo). Generated LaTeX tables are under `results/` and referenced via `\input{qrfl-artifacts/...}`.
-
-## Measured Metrics
-
-- Transaction latency (ms)
-- Throughput (TPS)
-- Block confirmation time
-- Payload size increase
-- CPU and memory (`docker stats`)
-- Failure/retry behavior
-
-## Configurations Compared
-
-1. **Classical** — ECDSA-signed payloads, minimal overhead
-2. **Hybrid** — ECDSA MSP + ML-DSA-65 application signatures
-3. **Native PQ** — ML-DSA-65 application signatures (MSP remains ECDSA)
-
-Results are written to `results/blockchain/`.
+Results: `results/blockchain/` (`ledger_latency.tex`, `live_testbed.tex`).

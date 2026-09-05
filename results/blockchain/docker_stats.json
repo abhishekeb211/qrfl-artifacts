@@ -1,57 +1,57 @@
 [
   {
-    "BlockIO": "45MB / 152kB",
-    "CPUPerc": "2.42%",
+    "BlockIO": "475kB / 193kB",
+    "CPUPerc": "2.50%",
     "Container": "1a52c148fe3909b9985edce964546a53bf124ff19c8bcdb300ebce7be756e5d8",
     "ID": "1a52c148fe39",
-    "MemPerc": "0.08%",
-    "MemUsage": "18.57MiB / 23.3GiB",
+    "MemPerc": "0.16%",
+    "MemUsage": "38.97MiB / 23.3GiB",
     "Name": "peer0.hospitala.example.com",
-    "NetIO": "7.23kB / 4.62kB",
+    "NetIO": "14.8kB / 8.21kB",
     "PIDs": "14"
   },
   {
-    "BlockIO": "4.21MB / 156kB",
-    "CPUPerc": "2.51%",
+    "BlockIO": "17.4MB / 197kB",
+    "CPUPerc": "2.18%",
     "Container": "e01b80b10c53a0be9b253eb7703da98ba1bfb653b7416cd551e8ff7e31dea53f",
     "ID": "e01b80b10c53",
-    "MemPerc": "0.09%",
-    "MemUsage": "22.6MiB / 23.3GiB",
+    "MemPerc": "0.16%",
+    "MemUsage": "37.91MiB / 23.3GiB",
     "Name": "peer0.hospitalb.example.com",
-    "NetIO": "1.44kB / 126B",
+    "NetIO": "8.92kB / 4.59kB",
+    "PIDs": "14"
+  },
+  {
+    "BlockIO": "31.8MB / 197kB",
+    "CPUPerc": "2.01%",
+    "Container": "73f1f9dd8a1732c6b655e493fa3593ebf69852228e640dd6515eb3dd5c7fcf4c",
+    "ID": "73f1f9dd8a17",
+    "MemPerc": "0.16%",
+    "MemUsage": "38.07MiB / 23.3GiB",
+    "Name": "peer0.research.example.com",
+    "NetIO": "8.96kB / 4.59kB",
     "PIDs": "15"
   },
   {
-    "BlockIO": "139kB / 156kB",
-    "CPUPerc": "2.44%",
-    "Container": "73f1f9dd8a1732c6b655e493fa3593ebf69852228e640dd6515eb3dd5c7fcf4c",
-    "ID": "73f1f9dd8a17",
-    "MemPerc": "0.07%",
-    "MemUsage": "17.6MiB / 23.3GiB",
-    "Name": "peer0.research.example.com",
-    "NetIO": "1.4kB / 126B",
-    "PIDs": "14"
-  },
-  {
-    "BlockIO": "7.61MB / 20.5kB",
-    "CPUPerc": "0.03%",
+    "BlockIO": "36.2MB / 24.6kB",
+    "CPUPerc": "0.05%",
     "Container": "86794400c2588a80147ddace073e29c7f8df412b6b22ea418030bb102223ee3e",
     "ID": "86794400c258",
     "MemPerc": "0.06%",
-    "MemUsage": "13.34MiB / 23.3GiB",
+    "MemUsage": "13.8MiB / 23.3GiB",
     "Name": "orderer.example.com",
-    "NetIO": "1.68kB / 126B",
-    "PIDs": "14"
+    "NetIO": "9.17kB / 4.59kB",
+    "PIDs": "13"
   },
   {
-    "BlockIO": "18.4MB / 205kB",
-    "CPUPerc": "0.26%",
+    "BlockIO": "33.4MB / 61.4kB",
+    "CPUPerc": "7.29%",
     "Container": "960f0671de7c9e80fdb8fbcadea729a4b7e2fc32136aa32a2fdde3edddba7b9e",
     "ID": "960f0671de7c",
-    "MemPerc": "0.33%",
-    "MemUsage": "77.7MiB / 23.3GiB",
+    "MemPerc": "0.36%",
+    "MemUsage": "86.23MiB / 23.3GiB",
     "Name": "couchdb-hospitala",
-    "NetIO": "6.17kB / 5.87kB",
+    "NetIO": "5.92kB / 6.03kB",
     "PIDs": "66"
   }
 ]

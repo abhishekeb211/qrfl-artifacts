@@ -189,6 +189,13 @@ def main() -> None:
     warmup = cfg["warmup"]
     trials = cfg["trials"]
 
+    if read_rapl_energy_uj() is None:
+        print(
+            "WARN: RAPL unavailable (/sys/class/powercap/intel-rapl); "
+            "energy/op will be --- (no invented joules). "
+            "Use abhi211b/qrfl-rapl on bare-metal Linux for numeric mJ."
+        )
+
     frames = []
     for op_name, fn in _build_pqc_operations():
         frames.append(profile_operation(op_name, fn, warmup, trials))

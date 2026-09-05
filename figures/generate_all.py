@@ -22,159 +22,78 @@ mpl.rcParams.update(
         "savefig.dpi": 300,
         "pdf.fonttype": 42,
         "ps.fonttype": 42,
+        "axes.prop_cycle": mpl.cycler(color=["#0072B2", "#E69F00", "#009E73", "#D55E00", "#CC79A7", "#56B4E9", "#F0E442", "#000000"]),
     }
 )
 
-PALETTE = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+# Okabe–Ito colorblind-safe palette
+PALETTE = ["#0072B2", "#E69F00", "#009E73", "#D55E00", "#CC79A7", "#56B4E9", "#F0E442", "#000000"]
 
 
 def plot_forecasting(root: Path, out: Path) -> None:
-    csv_path = root / "datasets" / "quantum_hardware_clean.csv"
-    if not csv_path.exists():
-        return
-    df = pd.read_csv(csv_path)
-    fig, ax = plt.subplots(figsize=(3.5, 2.8))
-    ax.scatter(df["year"], df["qubits"], c=PALETTE[0], s=40, label="Observed")
-    t = df["t_years"].values
-    import numpy as np
-    from scipy import stats
+    """Figure 2: published log-linear OLS forecast with 95% prediction intervals."""
+    from figures.plot_figure2_ols_forecast import copy_to_manuscript_figs, plot_ols_forecast
 
-    slope, intercept, _, _, _ = stats.linregress(t, np.log(df["qubits"]))
-    years = np.linspace(df["year"].min(), df["year"].max() + 15, 100)
-    t_proj = years - 2016
-    pred = np.exp(intercept + slope * t_proj)
-    ax.plot(years, pred, color=PALETTE[1], label="OLS exponential")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("Physical qubits")
-    ax.set_yscale("log")
-    ax.legend(frameon=False)
-    fig.tight_layout()
-    fig.savefig(out / "forecasting_model_comparison.pdf")
-    fig.savefig(out / "forecasting_model_comparison.png")
+    fig, _ = plot_ols_forecast(out)
+    copy_to_manuscript_figs(out)
     plt.close(fig)
 
 
 def plot_threshold_uncertainty(root: Path, out: Path) -> None:
-    scenarios = root / "results" / "forecasting" / "scenarios.csv"
-    if not scenarios.exists():
-        return
-    df = pd.read_csv(scenarios)
-    fig, ax = plt.subplots(figsize=(3.5, 2.8))
-    labels = df["scenario"].str.capitalize()
-    medians = df["bootstrap_median"]
-    lowers = df["ci_lower_95"]
-    uppers = df["ci_upper_95"]
-    x = range(len(df))
-    ax.errorbar(
-        x,
-        medians,
-        yerr=[medians - lowers, uppers - medians],
-        fmt="o",
-        color=PALETTE[0],
-        capsize=4,
-        label="Bootstrap median",
+    """Figure 3: PDF + ECDF of baseline (η = 1500) bootstrap crossing years."""
+    from figures.plot_figure3_bootstrap_distribution import (
+        copy_to_manuscript_figs,
+        plot_bootstrap_pdf_cdf,
+        resolve_crossing_years,
     )
-    ax.set_xticks(list(x))
-    ax.set_xticklabels(labels)
-    ax.set_ylabel("Threshold crossing year")
-    ax.set_xlabel("Scenario")
-    ax.legend(frameon=False)
-    fig.tight_layout()
-    fig.savefig(out / "threshold_crossing_uncertainty.pdf")
-    fig.savefig(out / "threshold_crossing_uncertainty.png")
+
+    years = resolve_crossing_years(root=root)
+    fig, _ = plot_bootstrap_pdf_cdf(years, out)
+    copy_to_manuscript_figs(out)
     plt.close(fig)
 
 
 def plot_sensitivity(root: Path, out: Path) -> None:
-    scenarios = root / "results" / "forecasting" / "scenarios.csv"
-    if not scenarios.exists():
-        return
-    df = pd.read_csv(scenarios)
-    fig, ax = plt.subplots(figsize=(3.5, 2.8))
-    ax.bar(df["scenario"], df["point_estimate_year"], color=PALETTE[1], label="Point estimate")
-    ax.set_ylabel("Crossing year")
-    ax.set_xlabel("Scenario ($\\eta$)")
-    ax.set_title("Timeline sensitivity by $\\eta$ scenario")
-    fig.tight_layout()
-    fig.savefig(out / "sensitivity_analysis.pdf")
-    fig.savefig(out / "sensitivity_analysis.png")
+    """Figure 4: Table 10 multi-parameter η–Q* crossing-year sweep."""
+    from figures.plot_figure4_sensitivity import copy_to_manuscript_figs, plot_sensitivity_sweep
+
+    fig, _ = plot_sensitivity_sweep(out)
+    copy_to_manuscript_figs(out)
     plt.close(fig)
 
 
+def plot_architecture(root: Path, out: Path) -> None:
+    """Figure 5: seaborn-themed Plotly QRFL architecture (PNG + PDF)."""
+    from figures.plot_figure5_architecture import copy_to_manuscript_figs, plot_architecture as _plot
+
+    _plot(out)
+    copy_to_manuscript_figs(out)
+
+
 def plot_pqc_summary(root: Path, out: Path) -> None:
-    summary = root / "results" / "pqc" / "summary.csv"
-    if not summary.exists():
-        return
-    df = pd.read_csv(summary)
-    kem = df[df["scheme"].str.contains("ML-KEM", na=False)]
-    if kem.empty:
-        return
-    fig, ax = plt.subplots(figsize=(3.5, 2.8))
-    ops = kem["operation"].unique()
-    x = range(len(ops))
-    for i, scheme in enumerate(kem["scheme"].unique()):
-        sub = kem[kem["scheme"] == scheme]
-        means = [sub[sub["operation"] == op]["mean_ms"].values[0] for op in ops]
-        ax.bar([xi + i * 0.25 for xi in x], means, width=0.25, label=scheme, color=PALETTE[i % len(PALETTE)])
-    ax.set_xticks([xi + 0.25 for xi in x])
-    ax.set_xticklabels(ops, rotation=20, ha="right")
-    ax.set_ylabel("Latency (ms)")
-    ax.legend(frameon=False, fontsize=8)
-    fig.tight_layout()
-    fig.savefig(out / "pqc_overhead_results.pdf")
-    fig.savefig(out / "pqc_overhead_results.png")
+    """Figure 6: Table 15 ML-KEM grouped latency bars with SD error bars."""
+    from figures.plot_figure6_mlkem_latency import copy_to_manuscript_figs, plot_mlkem_latency
+
+    fig, _ = plot_mlkem_latency(out)
+    copy_to_manuscript_figs(out)
     plt.close(fig)
 
 
 def plot_fl_latency(root: Path, out: Path) -> None:
-    fl = root / "results" / "fl" / "summary.csv"
-    if not fl.exists():
-        return
-    df = pd.read_csv(fl)
-    sub = df[df["alpha"] == 1.0] if "alpha" in df.columns else df
-    if sub.empty:
-        return
-    fig, ax = plt.subplots(figsize=(3.5, 2.8))
-    for i, mode in enumerate(sub["security_mode"].unique()):
-        m = sub[sub["security_mode"] == mode]
-        ax.plot(m["num_clients"], m["latency_mean"], marker="o", label=mode, color=PALETTE[i])
-    ax.set_xlabel("Number of clients")
-    ax.set_ylabel("Mean round latency (s)")
-    ax.legend(frameon=False)
-    fig.tight_layout()
-    fig.savefig(out / "fl_overhead_results.pdf")
-    fig.savefig(out / "fl_overhead_results.png")
+    """Figure 7: Table 17 two-panel FL latency and Native-PQ overhead."""
+    from figures.plot_figure7_fl_latency import copy_to_manuscript_figs, plot_fl_composite
+
+    fig, _ = plot_fl_composite(out)
+    copy_to_manuscript_figs(out)
     plt.close(fig)
 
 
 def plot_hlf_phases(root: Path, out: Path) -> None:
-    """Stacked bar chart of HLF lifecycle phases from calibrated simulation."""
-    from blockchain.client.submit_transactions import load_pqc_latencies, lifecycle_latency_ms
+    """Figure 8: Table 19 stacked HLF lifecycle latencies."""
+    from figures.plot_figure8_hlf_phases import copy_to_manuscript_figs, plot_hlf_stacked
 
-    lat = load_pqc_latencies(root)
-    configs = [
-        ("classical", "Classical"),
-        ("hybrid", "Hybrid"),
-        ("native_pq", "Native PQ"),
-    ]
-    phases = ["endorsement_ms", "ordering_ms", "validation_ms"]
-    phase_labels = ["Endorsement", "Ordering", "Validation"]
-    data = {label: [lifecycle_latency_ms(cfg, lat)[p] for p in phases] for cfg, label in configs}
-
-    fig, ax = plt.subplots(figsize=(3.5, 2.8))
-    x = range(len(configs))
-    bottom = [0.0] * len(configs)
-    for i, (phase_key, phase_label) in enumerate(zip(phases, phase_labels)):
-        heights = [data[label][i] for _, label in configs]
-        ax.bar(x, heights, bottom=bottom, label=phase_label, color=PALETTE[i % len(PALETTE)], width=0.55)
-        bottom = [b + h for b, h in zip(bottom, heights)]
-    ax.set_xticks(list(x))
-    ax.set_xticklabels([label for _, label in configs])
-    ax.set_ylabel("Latency (ms)")
-    ax.legend(frameon=False, fontsize=8)
-    fig.tight_layout()
-    fig.savefig(out / "hlf_phase_latencies.pdf")
-    fig.savefig(out / "hlf_phase_latencies.png")
+    fig, _ = plot_hlf_stacked(out)
+    copy_to_manuscript_figs(out)
     plt.close(fig)
 
 
@@ -209,6 +128,7 @@ def main() -> None:
     plot_forecasting(root, out)
     plot_threshold_uncertainty(root, out)
     plot_sensitivity(root, out)
+    plot_architecture(root, out)
     plot_pqc_summary(root, out)
     plot_fl_latency(root, out)
     plot_hlf_phases(root, out)

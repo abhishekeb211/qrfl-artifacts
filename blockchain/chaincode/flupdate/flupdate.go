@@ -63,8 +63,8 @@ func (c *FLUpdateContract) GetUpdate(ctx contractapi.TransactionContextInterface
 }
 
 func verifyMLDSA65(publicKey, message, signature []byte) (bool, error) {
-	pk, err := mldsa65.UnmarshalBinaryPublicKey(publicKey)
-	if err != nil {
+	pk := new(mldsa65.PublicKey)
+	if err := pk.UnmarshalBinary(publicKey); err != nil {
 		return false, err
 	}
 	valid := mldsa65.Verify(pk, message, nil, signature)
